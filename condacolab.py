@@ -63,6 +63,14 @@ c.InteractiveShellApp.exec_lines = [
     if sitepackages not in sys.path:
         sys.path.insert(0, sitepackages)
 
+    print("🩹 Patching environment...")
+    os.rename(sys.executable, sys.executable + ".real")
+    with open(sys.executable, "w") as f:
+        f.write(
+            f'exec env LD_LIBRARY_PATH="{prefix}:$LD_LIBRARY_PATH" {sys.executable}.real -x "$@"'
+        )
+    call(["chmod", "+x", sys.executable])
+
 
 def install_mambaforge(prefix=PREFIX):
     installer_url = r"https://github.com/jaimergp/miniforge/releases/download/refs%2Fpull%2F1%2Fmerge/Mambaforge-colab-Linux-x86_64.sh"
