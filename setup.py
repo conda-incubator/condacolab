@@ -30,7 +30,3 @@ setup(
     platforms=["Linux"],
     python_requires=">=3.6",  # Python version restrictions
 )
-
-import condacolab
-
-condacolab.install()
