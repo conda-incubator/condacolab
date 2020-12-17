@@ -21,7 +21,8 @@ def install(prefix="/usr/local"):
     installer_fn = "_miniconda_installer_.sh"
     with urlopen(installer_url) as response, open(installer_fn, "wb") as out:
         shutil.copyfileobj(response, out)
-    call(["bash", installer_fn, "-bfp", prefix])
+    print("Installing...")
+    call(["bash", installer_fn, "-bfp", prefix], stdout=sys.stdout, universal_newlines=True)
     os.unlink(installer_fn)
 
     print("Configuring pinnings...")
@@ -39,14 +40,11 @@ def install(prefix="/usr/local"):
     with open(prefix / ".condarc", "a") as f:
         f.write("always_yes: true\n")
 
-    print("Injecting site-packages...")
-    with open("/etc/ipython/ipython_config.py", "a") as f:
-        f.write("c.InteractiveShellApp.exec_lines = [\n")
-        f.write('  "import sys",\n'),
-        f.write(f'  "sys.path.insert(0, f"{prefix}/lib/python{pymaj}.{pymin}/site-packages")",\n')
-        f.write("]\n")
-
-    print("Reloading kernel with injected environment in 3 seconds...")
+    print("Kernel will now restart!")
+    print("Note: If the cell keeps spinning, just ignore it.")
+    print("      Wait five seconds and run the following cells as usual.")
     time.sleep(3)
-    os.environ["LD_LIBRARY_PATH"] = f"/usr/local/lib:{os.environ.get('LD_LIBRARY_PATH', '')}"
+    sitepackages = f"{prefix}/lib/python{pymaj}.{pymin}/site-packages"
+    os.environ["PYTHONPATH"] = f"{sitepackages}:{os.environ.get('PYTHONPATH', '')}"
+    os.environ["LD_LIBRARY_PATH"] = f"{prefix}/lib:{os.environ.get('LD_LIBRARY_PATH', '')}"
     os.execve(sys.executable, [sys.executable] + sys.argv, os.environ)
