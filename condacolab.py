@@ -19,16 +19,21 @@ def install_from_url(installer_url, prefix=PREFIX, inject=True):
     """
     Install Miniconda
     """
+    print(f"⏫ Upgrading libraries on system...")
+    call("add-apt-repository -y ppa:ubuntu-toolchain-r/test".split())
+    call("apt update".split())
+    call("apt install gcc-9 g++-9 libstdc++6 gfortran".split())
 
-    print(f"⬇ Downloading {installer_url}...")
+    print(f"⏬ Downloading {installer_url}...")
     installer_fn = "_miniconda_installer_.sh"
     with urlopen(installer_url) as response, open(installer_fn, "wb") as out:
         shutil.copyfileobj(response, out)
+
     print("📦 Installing...")
     call(["bash", installer_fn, "-bfp", prefix])
     os.unlink(installer_fn)
 
-    print("📌 Configuring pinnings...")
+    print("📌 Adjusting configuration...")
     cuda_version = ".".join(os.environ.get("CUDA_VERSION", "*.*.*").split(".")[:2])
     prefix = Path(prefix)
     condameta = prefix / "conda-meta"
@@ -43,29 +48,33 @@ def install_from_url(installer_url, prefix=PREFIX, inject=True):
     with open(prefix / ".condarc", "a") as f:
         f.write("always_yes: true\n")
 
-    if inject:
-        print("🔁 Kernel will now restart!")
-        print("ℹ If the cell keeps spinning, just ignore it.")
-        print("  Wait five seconds and run the following cells as usual.")
-        time.sleep(3)
-        patch_env_vars(prefix)
-    else:
-        sitepackages = f"{prefix}/lib/python{pymaj}.{pymin}/site-packages"
-        if sitepackages not in sys.path:
-            sys.path.insert(0, sitepackages)
+    with open("/etc/ipython/ipython_config.py", "a") as f:
+        f.write(
+            f"""
+        c.InteractiveShellApp.exec_lines = [
+            "import sys",
+            "sitepackages = f'{prefix}/lib/python{pymaj}.{pymin}/site-packages'",
+            "if sitepackages not in sys.path:",
+            "    sys.path.insert(0, sitepackages)",
+        ]
+        """
+        )
+    sitepackages = f"{prefix}/lib/python{pymaj}.{pymin}/site-packages"
+    if sitepackages not in sys.path:
+        sys.path.insert(0, sitepackages)
 
 
-def install(prefix=PREFIX, inject=True):
+def install_mambaforge(prefix=PREFIX):
     installer_url = r"https://github.com/jaimergp/miniforge/releases/download/refs%2Fpull%2F1%2Fmerge/Mambaforge-colab-Linux-x86_64.sh"
-    return install_from_url(installer_url, prefix=prefix, inject=inject)
+    return install_from_url(installer_url, prefix=prefix)
 
 
-install_mambaforge = install
+install = install_mambaforge
 
 
-def install_miniconda(prefix=PREFIX, inject=True):
-    installer_url = r"https://repo.continuum.io/miniconda/Miniconda3-4.5.4-Linux-x86_64.sh"
-    return install_from_url(installer_url, prefix=prefix, inject=inject)
+def install_miniconda(prefix=PREFIX):
+    installer_url = r"https://repo.anaconda.com/miniconda/Miniconda3-4.5.4-Linux-x86_64.sh"
+    install_from_url(installer_url, prefix=prefix)
 
 
 def patch_env_vars(prefix):
