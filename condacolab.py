@@ -23,15 +23,15 @@ def install(prefix=None):
         prefix = PREFIX
 
     installer_url = r"https://github.com/jaimergp/miniforge/releases/download/refs%2Fpull%2F1%2Fmerge/Mambaforge-colab-Linux-x86_64.sh"
-    print(f"Downloading {installer_url}...")
+    print(f"⬇ Downloading {installer_url}...")
     installer_fn = "_miniconda_installer_.sh"
     with urlopen(installer_url) as response, open(installer_fn, "wb") as out:
         shutil.copyfileobj(response, out)
-    print("Installing...")
+    print("📦 Installing...")
     call(["bash", installer_fn, "-bfp", prefix])
     os.unlink(installer_fn)
 
-    print("Configuring pinnings...")
+    print("📌 Configuring pinnings...")
     cuda_version = ".".join(os.environ.get("CUDA_VERSION", "*.*.*").split(".")[:2])
     prefix = Path(prefix)
     condameta = prefix / "conda-meta"
@@ -46,9 +46,9 @@ def install(prefix=None):
     with open(prefix / ".condarc", "a") as f:
         f.write("always_yes: true\n")
 
-    print("Kernel will now restart!")
-    print("Note: If the cell keeps spinning, just ignore it.")
-    print("      Wait five seconds and run the following cells as usual.")
+    print("🔁 Kernel will now restart!")
+    print("ℹ If the cell keeps spinning, just ignore it.")
+    print("  Wait five seconds and run the following cells as usual.")
     time.sleep(3)
     sitepackages = f"{prefix}/lib/python{pymaj}.{pymin}/site-packages"
     os.environ["PYTHONPATH"] = f"{sitepackages}:{os.environ.get('PYTHONPATH', '')}"
@@ -57,14 +57,15 @@ def install(prefix=None):
 
 
 def check():
-    assert find_executable("conda"), "Conda not found!"
-    assert find_executable("mamba"), "Mamba not found!"
+    assert find_executable("conda"), "💥 💔 💥 Conda not found!"
+    assert find_executable("mamba"), "💥 💔 💥 Mamba not found!"
 
     pymaj, pymin = sys.version_info[:2]
     sitepackages = f"{PREFIX}/lib/python{pymaj}.{pymin}/site-packages"
     assert (
         sitepackages in os.environ["PYTHONPATH"]
-    ), f"PYTHONPATH was not patched!, {os.environ['PYTHONPATH']}"
+    ), f"💥 💔 💥 PYTHONPATH was not patched!, {os.environ['PYTHONPATH']}"
     assert (
         f"{PREFIX}/lib" in os.environ["LD_LIBRARY_PATH"]
-    ), f"LD_LIBRARY_PATH was not patched!, {os.environ['LD_LIBRARY_PATH']}"
+    ), f"💥 💔 💥 LD_LIBRARY_PATH was not patched!, {os.environ['LD_LIBRARY_PATH']}"
+    print("✨ 🍰 ✨ Everything looks OK!")
