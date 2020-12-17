@@ -11,6 +11,7 @@ import sys
 from pathlib import Path
 import time
 from distutils.spawn import find_executable
+from IPython import get_ipython
 
 PREFIX = "/usr/local"
 
@@ -64,12 +65,16 @@ c.InteractiveShellApp.exec_lines = [
         sys.path.insert(0, sitepackages)
 
     print("🩹 Patching environment...")
-    os.rename(sys.executable, sys.executable + ".real")
     with open(sys.executable, "w") as f:
+        f.write("#!/bin/bash")
         f.write(
-            f'exec env LD_LIBRARY_PATH="{prefix}:$LD_LIBRARY_PATH" {sys.executable}.real -x $@'
+            f'exec env LD_LIBRARY_PATH="{prefix}/lib:$LD_LIBRARY_PATH" {sys.executable}.real -x $@'
         )
     call(["chmod", "+x", sys.executable])
+
+    print("🔁 Restarting kernel in 3s...")
+    time.sleep(3)
+    get_ipython().kernel.do_shutdown(True)
 
 
 def install_mambaforge(prefix=PREFIX):
@@ -85,31 +90,12 @@ def install_miniconda(prefix=PREFIX):
     install_from_url(installer_url, prefix=prefix)
 
 
-def patch_env_vars(prefix):
-    """
-    TODO: `os.execve` works but is unreliable. Sometimes the kernel does not reconnect!
-
-    Other things to (re)try:
-
-    * Adding env vars to /etc/share/jupyter/.../kernel.json & do a clean kernel restart
-    """
-
-    pymaj, pymin = sys.version_info[:2]
-    sitepackages = f"{prefix}/lib/python{pymaj}.{pymin}/site-packages"
-    os.environ["PYTHONPATH"] = f"{sitepackages}:{os.environ.get('PYTHONPATH', '')}"
-    os.environ["LD_LIBRARY_PATH"] = f"{prefix}/lib:{os.environ.get('LD_LIBRARY_PATH', '')}"
-    os.execve(sys.executable, [sys.executable] + sys.argv, os.environ)
-
-
 def check(prefix=PREFIX):
     assert find_executable("conda"), "💥💔💥 Conda not found!"
-    assert find_executable("mamba"), "💥💔💥 Mamba not found!"
 
     pymaj, pymin = sys.version_info[:2]
     sitepackages = f"{prefix}/lib/python{pymaj}.{pymin}/site-packages"
-    assert (
-        sitepackages in os.environ["PYTHONPATH"]
-    ), f"💥💔💥 PYTHONPATH was not patched! Value: {os.environ['PYTHONPATH']}"
+    assert sitepackages in sys.path, f"💥💔💥 PYTHONPATH was not patched! Value: {sys.path}"
     assert (
         f"{prefix}/lib" in os.environ["LD_LIBRARY_PATH"]
     ), f"💥💔💥 LD_LIBRARY_PATH was not patched! Value: {os.environ['LD_LIBRARY_PATH']}"
