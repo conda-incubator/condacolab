@@ -1,30 +1,39 @@
 """
-condacolab.py
+condacolab
 Install Conda and friends on Google Colab, easily
+
+Usage:
+
+>>> import condacolab
+>>> condacolab.install()
 """
 
-import shutil
-from urllib.request import urlopen
-from subprocess import call
 import os
 import sys
+import shutil
 from pathlib import Path
-import time
+from subprocess import call
+from urllib.request import urlopen
 from distutils.spawn import find_executable
+
 from IPython import get_ipython
+
+try:
+    import google.colab
+except ImportError:
+    raise RuntimeError("This module must ONLY run as part of a Colab notebook!")
+
 
 PREFIX = "/usr/local"
 
 
-def install_from_url(installer_url, prefix=PREFIX, inject=True):
+def install_from_url(installer_url, prefix=PREFIX):
     """
-    Install Miniconda
-    """
-    # print(f"⏫ Upgrading libraries on system...")
-    # call("add-apt-repository -y ppa:ubuntu-toolchain-r/test".split())
-    # call("apt update".split())
-    # call("apt install gcc-9 g++-9 libstdc++6 gfortran".split())
+    Download and run a constructor-like installer, patching
+    the necessary bits so it works on Colab right away.
 
+    A kernel restart is needed!
+    """
     print(f"⏬ Downloading {installer_url}...")
     installer_fn = "_miniconda_installer_.sh"
     with urlopen(installer_url) as response, open(installer_fn, "wb") as out:
@@ -73,8 +82,7 @@ c.InteractiveShellApp.exec_lines = [
         )
     call(["chmod", "+x", sys.executable])
 
-    print("🔁 Restarting kernel in 3s...")
-    time.sleep(3)
+    print("🔁 Restarting kernel...")
     get_ipython().kernel.do_shutdown(True)
 
 
