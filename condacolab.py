@@ -22,7 +22,7 @@ def install(prefix="/usr/local"):
     with urlopen(installer_url) as response, open(installer_fn, "wb") as out:
         shutil.copyfileobj(response, out)
     print("Installing...")
-    call(["bash", installer_fn, "-bfp", prefix], stdout=sys.stdout, universal_newlines=True)
+    call(["bash", installer_fn, "-bfp", prefix])
     os.unlink(installer_fn)
 
     print("Configuring pinnings...")
