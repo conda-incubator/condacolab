@@ -65,6 +65,7 @@ c.InteractiveShellApp.exec_lines = [
         sys.path.insert(0, sitepackages)
 
     print("🩹 Patching environment...")
+    os.rename(sys.executable, f"{sys.executable}.real")
     with open(sys.executable, "w") as f:
         f.write("#!/bin/bash\n")
         f.write(
