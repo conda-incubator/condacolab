@@ -10,12 +10,18 @@ import os
 import sys
 from pathlib import Path
 import time
+from distutils.spawn import find_executable
+
+PREFIX = "/usr/local"
 
 
-def install(prefix="/usr/local"):
+def install(prefix=None):
     """
     Install Miniconda
     """
+    if prefix is None:
+        prefix = PREFIX
+
     installer_url = r"https://github.com/jaimergp/miniforge/releases/download/refs%2Fpull%2F1%2Fmerge/Mambaforge-colab-Linux-x86_64.sh"
     print(f"Downloading {installer_url}...")
     installer_fn = "_miniconda_installer_.sh"
@@ -48,3 +54,17 @@ def install(prefix="/usr/local"):
     os.environ["PYTHONPATH"] = f"{sitepackages}:{os.environ.get('PYTHONPATH', '')}"
     os.environ["LD_LIBRARY_PATH"] = f"{prefix}/lib:{os.environ.get('LD_LIBRARY_PATH', '')}"
     os.execve(sys.executable, [sys.executable] + sys.argv, os.environ)
+
+
+def check():
+    assert find_executable("conda"), "Conda not found!"
+    assert find_executable("mamba"), "Mamba not found!"
+
+    pymaj, pymin = sys.version_info[:2]
+    sitepackages = f"{PREFIX}/lib/python{pymaj}.{pymin}/site-packages"
+    assert (
+        sitepackages in os.environ["PYTHONPATH"]
+    ), f"PYTHONPATH was not patched!, {os.environ['PYTHONPATH']}"
+    assert (
+        f"{PREFIX}/lib" in os.environ["LD_LIBRARY_PATH"]
+    ), f"LD_LIBRARY_PATH was not patched!, {os.environ['LD_LIBRARY_PATH']}"
