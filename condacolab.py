@@ -19,10 +19,10 @@ def install_from_url(installer_url, prefix=PREFIX, inject=True):
     """
     Install Miniconda
     """
-    print(f"⏫ Upgrading libraries on system...")
-    call("add-apt-repository -y ppa:ubuntu-toolchain-r/test".split())
-    call("apt update".split())
-    call("apt install gcc-9 g++-9 libstdc++6 gfortran".split())
+    # print(f"⏫ Upgrading libraries on system...")
+    # call("add-apt-repository -y ppa:ubuntu-toolchain-r/test".split())
+    # call("apt update".split())
+    # call("apt install gcc-9 g++-9 libstdc++6 gfortran".split())
 
     print(f"⏬ Downloading {installer_url}...")
     installer_fn = "_miniconda_installer_.sh"
@@ -67,7 +67,7 @@ c.InteractiveShellApp.exec_lines = [
     os.rename(sys.executable, sys.executable + ".real")
     with open(sys.executable, "w") as f:
         f.write(
-            f'exec env LD_LIBRARY_PATH="{prefix}:$LD_LIBRARY_PATH" {sys.executable}.real -x "$@"'
+            f'exec env LD_LIBRARY_PATH="{prefix}:$LD_LIBRARY_PATH" {sys.executable}.real -x $@'
         )
     call(["chmod", "+x", sys.executable])
 
