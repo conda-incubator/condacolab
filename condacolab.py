@@ -9,6 +9,7 @@ from subprocess import call
 import os
 import sys
 from pathlib import Path
+import time
 
 
 def install(prefix="/usr/local"):
@@ -45,6 +46,7 @@ def install(prefix="/usr/local"):
         f.write(f'  "sys.path.insert(0, f"{prefix}/lib/python{pymaj}.{pymin}/site-packages")",\n')
         f.write("]\n")
 
-    print("Reloading kernel with injected environment...")
+    print("Reloading kernel with injected environment in 3 seconds...")
+    time.sleep(3)
     os.environ["LD_LIBRARY_PATH"] = f"/usr/local/lib:{os.environ.get('LD_LIBRARY_PATH', '')}"
     os.execve(sys.executable, [sys.executable] + sys.argv, os.environ)
