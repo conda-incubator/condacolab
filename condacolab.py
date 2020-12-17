@@ -66,9 +66,9 @@ c.InteractiveShellApp.exec_lines = [
 
     print("🩹 Patching environment...")
     with open(sys.executable, "w") as f:
-        f.write("#!/bin/bash")
+        f.write("#!/bin/bash\n")
         f.write(
-            f'exec env LD_LIBRARY_PATH="{prefix}/lib:$LD_LIBRARY_PATH" {sys.executable}.real -x $@'
+            f'exec env LD_LIBRARY_PATH="{prefix}/lib:$LD_LIBRARY_PATH" {sys.executable}.real -x $@\n'
         )
     call(["chmod", "+x", sys.executable])
 
