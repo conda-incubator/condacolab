@@ -51,12 +51,12 @@ def install_from_url(installer_url, prefix=PREFIX, inject=True):
     with open("/etc/ipython/ipython_config.py", "a") as f:
         f.write(
             f"""
-        c.InteractiveShellApp.exec_lines = [
-            "import sys",
-            "sitepackages = f'{prefix}/lib/python{pymaj}.{pymin}/site-packages'",
-            "if sitepackages not in sys.path:",
-            "    sys.path.insert(0, sitepackages)",
-        ]
+c.InteractiveShellApp.exec_lines = [
+    "import sys",
+    "sitepackages = f'{prefix}/lib/python{pymaj}.{pymin}/site-packages'",
+    "if sitepackages not in sys.path:",
+    "    sys.path.insert(0, sitepackages)",
+]
         """
         )
     sitepackages = f"{prefix}/lib/python{pymaj}.{pymin}/site-packages"
