@@ -13,6 +13,7 @@ For more details, check the docstrings for ``install_from_url()``.
 import os
 import sys
 import shutil
+from datetime import datetime, timedelta
 from pathlib import Path
 from subprocess import call
 from typing import Dict, AnyStr
@@ -62,6 +63,7 @@ def install_from_url(
             env={"VAR": '"a value with spaces"'}
 
     """
+    t0 = datetime.now()
     print(f"⏬ Downloading {installer_url}...")
     installer_fn = "__installer__.sh"
     with urlopen(installer_url) as response, open(installer_fn, "wb") as out:
@@ -110,6 +112,9 @@ def install_from_url(
         envstr = " ".join(f"{k}={v}" for k, v in env.items())
         f.write(f"exec env {envstr} {sys.executable}.real -x $@\n")
     call(["chmod", "+x", sys.executable])
+
+    taken = timedelta(seconds=round((datetime.now() - t0).total_seconds(), 0))
+    print(f"⌛ Done in {taken}!")
 
     print("🔁 Restarting kernel...")
     get_ipython().kernel.do_shutdown(True)
