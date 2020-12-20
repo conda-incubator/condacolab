@@ -114,7 +114,7 @@ def install_from_url(
     call(["chmod", "+x", sys.executable])
 
     taken = timedelta(seconds=round((datetime.now() - t0).total_seconds(), 0))
-    print(f"⌛ Done in {taken}!")
+    print(f"⏲ Done in {taken}")
 
     print("🔁 Restarting kernel...")
     get_ipython().kernel.do_shutdown(True)
