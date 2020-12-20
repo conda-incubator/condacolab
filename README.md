@@ -9,7 +9,7 @@ Install Conda and friends on Google Colab, easily.
 On your Colab notebook, run the following code as the _first executable cell_:
 
 ```python
-!pip install condacolab
+!pip install -q condacolab
 import condacolab
 condacolab.install()
 ```
@@ -56,5 +56,5 @@ Google Colab runs on Python 3.6. We install the Miniconda distribution on top of
 
 ## Shortcomings
 
-- The Python kernel needs to be restarted for changes to be applied. This happens automatically.
-- You can only use the `base` environment, so do not try to create more.
+- The Python kernel needs to be restarted for changes to be applied. This happens automatically. If you are wondering why you are seeing a message saying _"Your session crashed for an unknown reason"_, this is why. You can safely ignore this message!
+- You can only use the `base` environment, so do not try to create more environments with `conda create`.
