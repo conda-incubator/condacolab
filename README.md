@@ -6,6 +6,8 @@ Install Conda and friends on Google Colab, easily.
 
 ## Usage
 
+> **TLDR**: Check the [example notebook here](https://colab.research.google.com/drive/1c_RGCgQeLHVXlF44LyOFjfUW32CmG6BP)!
+
 On your Colab notebook, run the following code as the _first executable cell_:
 
 ```python
