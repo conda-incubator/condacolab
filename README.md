@@ -1,10 +1,60 @@
-# CondaColab
+# condacolab
 
-<!-- [//]: # (Badges)
-[![GitHub Actions Build Status](https://github.com/REPLACE_WITH_OWNER_ACCOUNT/condacolab/workflows/CI/badge.svg)](https://github.com/jaimergp/condacolab/actions?query=workflow%3ACI) -->
+Install Conda and friends on Google Colab, easily.
 
-Install Conda and friends on Google Colab, easily
+![CondaColab](condacolab.png)
 
-### Copyright
+## Usage
 
-Copyright (c) 2020, Jaime RGP
+On your Colab notebook, run the following code as the _first executable cell_:
+
+```python
+!pip install condacolab
+import condacolab
+condacolab.install()
+```
+
+After the kernel restart, you can optionally add a new cell to check that everything is in place:
+
+```python
+import condacolab
+condacolab.check()
+```
+
+> It is important that you perform the installation first thing in the notebook because it will require a kernel restart, thus resetting the variables set up to that point.
+
+The default `condacolab.install()` provides Mambaforge, but there are other `conda` distributions to choose from:
+
+- `install_anaconda()`: this will install the Anaconda 5.2.0 distribution, the last version that was built for Python 3.6. This contains [plenty of data science packages](https://docs.anaconda.com/anaconda/packages/old-pkg-lists/5.2.0/py3.6_linux-64/), but they might be outdated by now.
+- `install_miniconda()`: this will install the Miniconda 4.5.4 distribution, the last version that was built for Python 3.6. Unlike Anaconda, this distribution only contains `python` and `conda`.
+- `install_miniforge()`: Like Miniconda, but built off `conda-forge` packages. The Miniforge distribution is officially provided by [conda-forge](https://github.com/conda-forge/miniforge) but I [forked and patched it](https://github.com/jaimergp/miniforge) so it's built for Python 3.6.
+- `install_mambaforge()`: Like Miniforge, but with `mamba included`.The Mambaforge distribution is officially provided by [conda-forge](https://github.com/conda-forge/miniforge) but I [forked and patched it](https://github.com/jaimergp/miniforge) so it's built for Python 3.6.
+
+For advanced users, `install_from_url()` is also available. It expects a URL pointing to a [`constructor`-like installer](https://github.com/conda/constructor), so you can use prebuild a distribution for your own needs.
+
+Once the installation is done, you can use `conda` and/or `mamba` to install the needed packages:
+
+```bash
+!conda install openmm
+
+# or, faster:
+!mamba install openmm
+```
+
+If you have a environment file (e.g. `environment.yml`), you can use it like this:
+
+```bash
+!conda env update -n base -f environment.yml
+
+# or, faster:
+!mamba env update -n base -f environment.yml
+```
+
+## How does it work
+
+Google Colab runs on Python 3.6. We install the Miniconda distribution on top of the existing one at `/usr/local`, add a few configuration files so we stay with Python 3.6 (`conda` auto updates by default) and the newly installed packages are available. Finally, we wrap the Python executable to inject some environment variables needed to load the new libraries. Since we need to re-read `LD_LIBRARY_PATH`, a kernel restart is needed.
+
+## Shortcomings
+
+- The Python kernel needs to be restarted for changes to be applied. This happens automatically.
+- You can only use the `base` environment, so do not try to create more.
