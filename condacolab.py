@@ -60,7 +60,7 @@ def install_from_url(
 
     """
     print(f"⏬ Downloading {installer_url}...")
-    installer_fn = "_miniconda_installer_.sh"
+    installer_fn = "__installer__.sh"
     with urlopen(installer_url) as response, open(installer_fn, "wb") as out:
         shutil.copyfileobj(response, out)
 
@@ -112,21 +112,126 @@ def install_from_url(
     get_ipython().kernel.do_shutdown(True)
 
 
-def install_mambaforge(prefix: os.PathLike = PREFIX):
-    installer_url = r"https://github.com/jaimergp/miniforge/releases/download/refs%2Fpull%2F1%2Fmerge/Mambaforge-colab-Linux-x86_64.sh"
-    return install_from_url(installer_url, prefix=prefix)
+def install_mambaforge(prefix: os.PathLike = PREFIX, env: Dict[AnyStr, AnyStr] = None):
+    """
+    Install Mambaforge, built for Python 3.6.
+
+    Mambaforge consists of a Miniconda-like distribution optimized
+    and preconfigured for conda-forge packages, and includes ``mamba``,
+    a faster ``conda`` implementation.
+
+    Unlike the official Miniconda, this is built with the latest ``conda``.
+
+    Parameters
+    ----------
+    prefix
+        Target location for the installation
+    env
+        Environment variables to inject in the kernel restart.
+        We *need* to inject ``LD_LIBRARY_PATH`` so ``{PREFIX}/lib``
+        is first, but you can also add more if you need it. Take
+        into account that no quote handling is done, so you need
+        to add those yourself in the raw string. They will
+        end up added to a line like ``exec env VAR=VALUE python3...``.
+        For example, a value with spaces should be passed as::
+
+            env={"VAR": '"a value with spaces"'}
+    """
+    installer_url = r"https://github.com/jaimergp/miniforge/releases/latest/download/Mambaforge-colab-Linux-x86_64.sh"
+    install_from_url(installer_url, prefix=prefix, env=env)
 
 
 # Make mambaforge the default
 install = install_mambaforge
 
 
-def install_miniconda(prefix: os.PathLike = PREFIX):
+def install_miniforge(prefix: os.PathLike = PREFIX, env: Dict[AnyStr, AnyStr] = None):
+    """
+    Install Mambaforge, built for Python 3.6.
+
+    Mambaforge consists of a Miniconda-like distribution optimized
+    and preconfigured for conda-forge packages.
+
+    Unlike the official Miniconda, this is built with the latest ``conda``.
+
+    Parameters
+    ----------
+    prefix
+        Target location for the installation
+    env
+        Environment variables to inject in the kernel restart.
+        We *need* to inject ``LD_LIBRARY_PATH`` so ``{PREFIX}/lib``
+        is first, but you can also add more if you need it. Take
+        into account that no quote handling is done, so you need
+        to add those yourself in the raw string. They will
+        end up added to a line like ``exec env VAR=VALUE python3...``.
+        For example, a value with spaces should be passed as::
+
+            env={"VAR": '"a value with spaces"'}
+    """
+    installer_url = r"https://github.com/jaimergp/miniforge/releases/latest/download/Miniforge-colab-Linux-x86_64.sh"
+    install_from_url(installer_url, prefix=prefix, env=env)
+
+
+def install_miniconda(prefix: os.PathLike = PREFIX, env: Dict[AnyStr, AnyStr] = None):
+    """
+    Install Miniconda 4.5.4, the last official version to be built
+    for Python 3.6.
+
+    Parameters
+    ----------
+    prefix
+        Target location for the installation
+    env
+        Environment variables to inject in the kernel restart.
+        We *need* to inject ``LD_LIBRARY_PATH`` so ``{PREFIX}/lib``
+        is first, but you can also add more if you need it. Take
+        into account that no quote handling is done, so you need
+        to add those yourself in the raw string. They will
+        end up added to a line like ``exec env VAR=VALUE python3...``.
+        For example, a value with spaces should be passed as::
+
+            env={"VAR": '"a value with spaces"'}
+    """
     installer_url = r"https://repo.anaconda.com/miniconda/Miniconda3-4.5.4-Linux-x86_64.sh"
-    install_from_url(installer_url, prefix=prefix)
+    install_from_url(installer_url, prefix=prefix, env=env)
+
+
+def install_anaconda(prefix: os.PathLike = PREFIX, env: Dict[AnyStr, AnyStr] = None):
+    """
+    Install Anaconda 5.2.0, the last official version to be built
+    for Python 3.6.
+
+    Parameters
+    ----------
+    prefix
+        Target location for the installation
+    env
+        Environment variables to inject in the kernel restart.
+        We *need* to inject ``LD_LIBRARY_PATH`` so ``{PREFIX}/lib``
+        is first, but you can also add more if you need it. Take
+        into account that no quote handling is done, so you need
+        to add those yourself in the raw string. They will
+        end up added to a line like ``exec env VAR=VALUE python3...``.
+        For example, a value with spaces should be passed as::
+
+            env={"VAR": '"a value with spaces"'}
+    """
+    installer_url = r"https://repo.anaconda.com/archive/Anaconda3-5.2.0-Linux-x86_64.sh"
+    install_from_url(installer_url, prefix=prefix, env=env)
 
 
 def check(prefix: os.PathLike = PREFIX):
+    """
+    Run some basic checks to ensure that ``conda`` has been installed
+    correctly
+
+    Parameters
+    ----------
+    prefix
+        Location where ``conda`` was installed (should match the one
+        provided for ``install()``.
+    """
     assert find_executable("conda"), "💥💔💥 Conda not found!"
 
     pymaj, pymin = sys.version_info[:2]
