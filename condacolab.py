@@ -108,7 +108,7 @@ def install_from_url(
     with open(sys.executable, "w") as f:
         f.write("#!/bin/bash\n")
         envstr = " ".join(f"{k}={v}" for k, v in env.items())
-        f.write(f"exec env {envstr} {sys.executable}.real -x $@\n")
+        f.write(f"exec env {envstr} {prefix}/bin/python -x $@\n")
     call(["chmod", "+x", sys.executable])
 
     print("🔁 Restarting kernel...")
