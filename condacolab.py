@@ -27,6 +27,7 @@ except ImportError:
     raise RuntimeError("This module must ONLY run as part of a Colab notebook!")
 
 
+__VERSION__ = "0.1"
 PREFIX = "/usr/local"
 
 

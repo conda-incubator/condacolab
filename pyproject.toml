@@ -1,0 +1,15 @@
+[tool.poetry]
+name = "condacolab"
+version = "0.1.0"
+description = "Install Conda and friends on Google Colab, easily"
+authors = ["Jaime Rodríguez-Guerra <jaimergp@users.noreply.github.com>"]
+license = "MIT"
+homepage = "https://github.com/jaimergp/condacolab"
+repository = "https://github.com/jaimergp/condacolab"
+
+[tool.poetry.dependencies]
+python = "^3.6"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
