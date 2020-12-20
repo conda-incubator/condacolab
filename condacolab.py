@@ -237,6 +237,8 @@ def check(prefix: os.PathLike = PREFIX):
     """
     assert find_executable("conda"), "💥💔💥 Conda not found!"
 
+    assert sys.executable.startswith(f"{prefix}/bin/"), "💥💔💥 Conda's Python is not being used!"
+
     pymaj, pymin = sys.version_info[:2]
     sitepackages = f"{prefix}/lib/python{pymaj}.{pymin}/site-packages"
     assert sitepackages in sys.path, f"💥💔💥 PYTHONPATH was not patched! Value: {sys.path}"
