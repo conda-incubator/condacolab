@@ -27,7 +27,10 @@ except ImportError:
     raise RuntimeError("This module must ONLY run as part of a Colab notebook!")
 
 
-__VERSION__ = "0.1"
+__version__ = "0.1"
+__author__ = "Jaime Rodríguez-Guerra <jaimergp@users.noreply.github.com>"
+
+
 PREFIX = "/usr/local"
 
 
@@ -241,3 +244,15 @@ def check(prefix: os.PathLike = PREFIX):
         f"{prefix}/lib" in os.environ["LD_LIBRARY_PATH"]
     ), f"💥💔💥 LD_LIBRARY_PATH was not patched! Value: {os.environ['LD_LIBRARY_PATH']}"
     print("✨🍰✨ Everything looks OK!")
+
+
+__all__ = [
+    "install",
+    "install_from_url",
+    "install_mambaforge",
+    "install_miniforge",
+    "install_miniconda",
+    "install_anaconda",
+    "check",
+    "PREFIX",
+]
