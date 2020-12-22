@@ -36,7 +36,10 @@ PREFIX = "/usr/local"
 
 
 def install_from_url(
-    installer_url: AnyStr, prefix: os.PathLike = PREFIX, env: Dict[AnyStr, AnyStr] = None
+    installer_url: AnyStr,
+    prefix: os.PathLike = PREFIX,
+    env: Dict[AnyStr, AnyStr] = None,
+    run_checks: bool = True,
 ):
     """
     Download and run a constructor-like installer, patching
@@ -61,8 +64,17 @@ def install_from_url(
         For example, a value with spaces should be passed as::
 
             env={"VAR": '"a value with spaces"'}
-
+    run_checks
+        Run checks to see if installation was run previously.
+        Change to False to ignore checks and always attempt
+        to run the installation.
     """
+    if run_checks:
+        try:  # run checks to see if it this was run already
+            return check(prefix)
+        except AssertionError:
+            pass  # just install
+
     t0 = datetime.now()
     print(f"⏬ Downloading {installer_url}...")
     installer_fn = "__installer__.sh"
@@ -120,7 +132,9 @@ def install_from_url(
     get_ipython().kernel.do_shutdown(True)
 
 
-def install_mambaforge(prefix: os.PathLike = PREFIX, env: Dict[AnyStr, AnyStr] = None):
+def install_mambaforge(
+    prefix: os.PathLike = PREFIX, env: Dict[AnyStr, AnyStr] = None, run_checks: bool = True
+):
     """
     Install Mambaforge, built for Python 3.6.
 
@@ -144,16 +158,22 @@ def install_mambaforge(prefix: os.PathLike = PREFIX, env: Dict[AnyStr, AnyStr] =
         For example, a value with spaces should be passed as::
 
             env={"VAR": '"a value with spaces"'}
+    run_checks
+        Run checks to see if installation was run previously.
+        Change to False to ignore checks and always attempt
+        to run the installation.
     """
     installer_url = r"https://github.com/jaimergp/miniforge/releases/latest/download/Mambaforge-colab-Linux-x86_64.sh"
-    install_from_url(installer_url, prefix=prefix, env=env)
+    install_from_url(installer_url, prefix=prefix, env=env, run_checks=run_checks)
 
 
 # Make mambaforge the default
 install = install_mambaforge
 
 
-def install_miniforge(prefix: os.PathLike = PREFIX, env: Dict[AnyStr, AnyStr] = None):
+def install_miniforge(
+    prefix: os.PathLike = PREFIX, env: Dict[AnyStr, AnyStr] = None, run_checks: bool = True
+):
     """
     Install Mambaforge, built for Python 3.6.
 
@@ -176,12 +196,18 @@ def install_miniforge(prefix: os.PathLike = PREFIX, env: Dict[AnyStr, AnyStr] = 
         For example, a value with spaces should be passed as::
 
             env={"VAR": '"a value with spaces"'}
+    run_checks
+        Run checks to see if installation was run previously.
+        Change to False to ignore checks and always attempt
+        to run the installation.
     """
     installer_url = r"https://github.com/jaimergp/miniforge/releases/latest/download/Miniforge-colab-Linux-x86_64.sh"
-    install_from_url(installer_url, prefix=prefix, env=env)
+    install_from_url(installer_url, prefix=prefix, env=env, run_checks=run_checks)
 
 
-def install_miniconda(prefix: os.PathLike = PREFIX, env: Dict[AnyStr, AnyStr] = None):
+def install_miniconda(
+    prefix: os.PathLike = PREFIX, env: Dict[AnyStr, AnyStr] = None, run_checks: bool = True
+):
     """
     Install Miniconda 4.5.4, the last official version to be built
     for Python 3.6.
@@ -200,12 +226,18 @@ def install_miniconda(prefix: os.PathLike = PREFIX, env: Dict[AnyStr, AnyStr] = 
         For example, a value with spaces should be passed as::
 
             env={"VAR": '"a value with spaces"'}
+    run_checks
+        Run checks to see if installation was run previously.
+        Change to False to ignore checks and always attempt
+        to run the installation.
     """
     installer_url = r"https://repo.anaconda.com/miniconda/Miniconda3-4.5.4-Linux-x86_64.sh"
-    install_from_url(installer_url, prefix=prefix, env=env)
+    install_from_url(installer_url, prefix=prefix, env=env, run_checks=run_checks)
 
 
-def install_anaconda(prefix: os.PathLike = PREFIX, env: Dict[AnyStr, AnyStr] = None):
+def install_anaconda(
+    prefix: os.PathLike = PREFIX, env: Dict[AnyStr, AnyStr] = None, run_checks: bool = True
+):
     """
     Install Anaconda 5.2.0, the last official version to be built
     for Python 3.6.
@@ -224,12 +256,16 @@ def install_anaconda(prefix: os.PathLike = PREFIX, env: Dict[AnyStr, AnyStr] = N
         For example, a value with spaces should be passed as::
 
             env={"VAR": '"a value with spaces"'}
+    run_checks
+        Run checks to see if installation was run previously.
+        Change to False to ignore checks and always attempt
+        to run the installation.
     """
     installer_url = r"https://repo.anaconda.com/archive/Anaconda3-5.2.0-Linux-x86_64.sh"
-    install_from_url(installer_url, prefix=prefix, env=env)
+    install_from_url(installer_url, prefix=prefix, env=env, run_checks=run_checks)
 
 
-def check(prefix: os.PathLike = PREFIX):
+def check(prefix: os.PathLike = PREFIX, verbose: bool = True):
     """
     Run some basic checks to ensure that ``conda`` has been installed
     correctly
@@ -239,6 +275,8 @@ def check(prefix: os.PathLike = PREFIX):
     prefix
         Location where ``conda`` was installed (should match the one
         provided for ``install()``.
+    verbose
+        Print success message if True
     """
     assert find_executable("conda"), "💥💔💥 Conda not found!"
 
@@ -248,7 +286,8 @@ def check(prefix: os.PathLike = PREFIX):
     assert (
         f"{prefix}/lib" in os.environ["LD_LIBRARY_PATH"]
     ), f"💥💔💥 LD_LIBRARY_PATH was not patched! Value: {os.environ['LD_LIBRARY_PATH']}"
-    print("✨🍰✨ Everything looks OK!")
+    if verbose:
+        print("✨🍰✨ Everything looks OK!")
 
 
 __all__ = [
