@@ -1,5 +1,9 @@
 # condacolab
 
+[![Downloads](https://pepy.tech/badge/condacolab/week)](https://pypi.org/project/condacolab)
+[![Downloads](https://pepy.tech/badge/condacolab/month)](https://pypi.org/project/condacolab)
+[![Downloads](https://pepy.tech/badge/condacolab)](https://pypi.org/project/condacolab)
+
 Install Conda and friends on Google Colab, easily.
 
 ![CondaColab](condacolab.png)
