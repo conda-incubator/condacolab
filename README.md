@@ -54,7 +54,7 @@ If you have a environment file (e.g. `environment.yml`), you can use it like thi
 
 ## How does it work
 
-Google Colab runs on Python 3.6. We install the Miniconda distribution on top of the existing one at `/usr/local`, add a few configuration files so we stay with Python 3.6 (`conda` auto updates by default) and the newly installed packages are available. Finally, we wrap the Python executable to redirect and inject some environment variables needed to load the new libraries. Since we need to re-read `LD_LIBRARY_PATH`, a kernel restart is needed.
+Google Colab runs on Python 3.7. We install the Miniconda distribution on top of the existing one at `/usr/local`, add a few configuration files so we stay with Python 3.7 (`conda` auto updates by default) and the newly installed packages are available. Finally, we wrap the Python executable to redirect and inject some environment variables needed to load the new libraries. Since we need to re-read `LD_LIBRARY_PATH`, a kernel restart is needed.
 
 ## Shortcomings
 
