@@ -2,7 +2,7 @@
 
 Install Conda and friends on Google Colab, easily.
 
-![CondaColab](condacolab.png)
+![CondaColab](https://github.com/jaimergp/condacolab/raw/main/condacolab.png)
 
 ## Usage
 
