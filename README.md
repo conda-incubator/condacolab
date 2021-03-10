@@ -32,7 +32,7 @@ The default `condacolab.install()` provides Mambaforge, but there are other `con
 - `install_miniforge()`: Like Miniconda, but built off `conda-forge` packages. The Miniforge distribution is officially provided by [conda-forge](https://github.com/conda-forge/miniforge) but I [forked and patched it](https://github.com/jaimergp/miniforge) so it's built for Python 3.7.
 - `install_mambaforge()`: Like Miniforge, but with `mamba` included. The Mambaforge distribution is officially provided by [conda-forge](https://github.com/conda-forge/miniforge) but I [forked and patched it](https://github.com/jaimergp/miniforge) so it's built for Python 3.7.
 
-For advanced users, `install_from_url()` is also available. It expects a URL pointing to a [`constructor`-like installer](https://github.com/conda/constructor), so you can prebuild a Python distribution that fulfills your own needs.
+For advanced users, `install_from_url()` is also available. It expects a URL pointing to a [`constructor`-like installer](https://github.com/conda/constructor), so you can prebuild a Python 3.7 distribution that fulfills your own needs.
 
 Once the installation is done, you can use `conda` and/or `mamba` to install the needed packages:
 
