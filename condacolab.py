@@ -28,7 +28,7 @@ except ImportError:
     raise RuntimeError("This module must ONLY run as part of a Colab notebook!")
 
 
-__version__ = "0.1.1"
+__version__ = "0.1.2"
 __author__ = "Jaime Rodríguez-Guerra <jaimergp@users.noreply.github.com>"
 
 
@@ -231,7 +231,7 @@ def install_miniconda(
         Change to False to ignore checks and always attempt
         to run the installation.
     """
-    installer_url = r"https://repo.anaconda.com/miniconda/Miniconda3-4.5.4-Linux-x86_64.sh"
+    installer_url = r"https://repo.anaconda.com/miniconda/Miniconda3-py37_4.9.2-Linux-x86_64.sh"
     install_from_url(installer_url, prefix=prefix, env=env, run_checks=run_checks)
 
 
@@ -261,7 +261,7 @@ def install_anaconda(
         Change to False to ignore checks and always attempt
         to run the installation.
     """
-    installer_url = r"https://repo.anaconda.com/archive/Anaconda3-5.2.0-Linux-x86_64.sh"
+    installer_url = r"https://repo.anaconda.com/archive/Anaconda3-2020.02-Linux-x86_64.sh"
     install_from_url(installer_url, prefix=prefix, env=env, run_checks=run_checks)
 
 
