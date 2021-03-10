@@ -136,7 +136,7 @@ def install_mambaforge(
     prefix: os.PathLike = PREFIX, env: Dict[AnyStr, AnyStr] = None, run_checks: bool = True
 ):
     """
-    Install Mambaforge, built for Python 3.6.
+    Install Mambaforge, built for Python 3.7.
 
     Mambaforge consists of a Miniconda-like distribution optimized
     and preconfigured for conda-forge packages, and includes ``mamba``,
@@ -175,7 +175,7 @@ def install_miniforge(
     prefix: os.PathLike = PREFIX, env: Dict[AnyStr, AnyStr] = None, run_checks: bool = True
 ):
     """
-    Install Mambaforge, built for Python 3.6.
+    Install Mambaforge, built for Python 3.7.
 
     Mambaforge consists of a Miniconda-like distribution optimized
     and preconfigured for conda-forge packages.
@@ -209,8 +209,7 @@ def install_miniconda(
     prefix: os.PathLike = PREFIX, env: Dict[AnyStr, AnyStr] = None, run_checks: bool = True
 ):
     """
-    Install Miniconda 4.5.4, the last official version to be built
-    for Python 3.6.
+    Install Miniconda 4.9.2 for Python 3.7.
 
     Parameters
     ----------
@@ -239,8 +238,8 @@ def install_anaconda(
     prefix: os.PathLike = PREFIX, env: Dict[AnyStr, AnyStr] = None, run_checks: bool = True
 ):
     """
-    Install Anaconda 5.2.0, the last official version to be built
-    for Python 3.6.
+    Install Anaconda 2020.02, the last official version built
+    for Python 3.7.
 
     Parameters
     ----------
