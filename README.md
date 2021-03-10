@@ -27,10 +27,10 @@ condacolab.check()
 
 The default `condacolab.install()` provides Mambaforge, but there are other `conda` distributions to choose from:
 
-- `install_anaconda()`: This will install the Anaconda 5.2.0 distribution, the last version that was built for Python 3.6. This contains [plenty of data science packages](https://docs.anaconda.com/anaconda/packages/old-pkg-lists/5.2.0/py3.6_linux-64/), but they might be outdated by now.
-- `install_miniconda()`: This will install the Miniconda 4.5.4 distribution, the last version that was built for Python 3.6. Unlike Anaconda, this distribution only contains `python` and `conda`.
-- `install_miniforge()`: Like Miniconda, but built off `conda-forge` packages. The Miniforge distribution is officially provided by [conda-forge](https://github.com/conda-forge/miniforge) but I [forked and patched it](https://github.com/jaimergp/miniforge) so it's built for Python 3.6.
-- `install_mambaforge()`: Like Miniforge, but with `mamba` included. The Mambaforge distribution is officially provided by [conda-forge](https://github.com/conda-forge/miniforge) but I [forked and patched it](https://github.com/jaimergp/miniforge) so it's built for Python 3.6.
+- `install_anaconda()`: This will install the Anaconda 2020.02 distribution, the last version that was built for Python 3.7. This contains [plenty of data science packages](https://docs.anaconda.com/anaconda/packages/old-pkg-lists/2020.02/py3.7_linux-64/), but they might be outdated by now.
+- `install_miniconda()`: This will install the Miniconda 4.9.2 distribution, using a version built for Python 3.7. Unlike Anaconda, this distribution only contains `python` and `conda`.
+- `install_miniforge()`: Like Miniconda, but built off `conda-forge` packages. The Miniforge distribution is officially provided by [conda-forge](https://github.com/conda-forge/miniforge) but I [forked and patched it](https://github.com/jaimergp/miniforge) so it's built for Python 3.7.
+- `install_mambaforge()`: Like Miniforge, but with `mamba` included. The Mambaforge distribution is officially provided by [conda-forge](https://github.com/conda-forge/miniforge) but I [forked and patched it](https://github.com/jaimergp/miniforge) so it's built for Python 3.7.
 
 For advanced users, `install_from_url()` is also available. It expects a URL pointing to a [`constructor`-like installer](https://github.com/conda/constructor), so you can prebuild a Python distribution that fulfills your own needs.
 
