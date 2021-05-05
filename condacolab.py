@@ -14,9 +14,10 @@ import os
 import sys
 import shutil
 from datetime import datetime, timedelta
+from glob import glob
 from pathlib import Path
-from subprocess import call
-from typing import Dict, AnyStr
+from subprocess import run
+from typing import Dict, AnyStr, List
 from urllib.request import urlopen
 from distutils.spawn import find_executable
 
@@ -82,51 +83,10 @@ def install_from_url(
         shutil.copyfileobj(response, out)
 
     print("📦 Installing...")
-    call(["bash", installer_fn, "-bfp", str(prefix)])
+    _run(["bash", installer_fn, "-bfp", str(prefix)])
     os.unlink(installer_fn)
 
-    print("📌 Adjusting configuration...")
-    cuda_version = ".".join(os.environ.get("CUDA_VERSION", "*.*.*").split(".")[:2])
-    prefix = Path(prefix)
-    condameta = prefix / "conda-meta"
-    condameta.mkdir(parents=True, exist_ok=True)
-    pymaj, pymin = sys.version_info[:2]
-
-    with open(condameta / "pinned", "a") as f:
-        f.write(f"python {pymaj}.{pymin}.*\n")
-        f.write(f"python_abi {pymaj}.{pymin}.* *cp{pymaj}{pymin}*\n")
-        f.write(f"cudatoolkit {cuda_version}.*\n")
-
-    with open(prefix / ".condarc", "a") as f:
-        f.write("always_yes: true\n")
-
-    with open("/etc/ipython/ipython_config.py", "a") as f:
-        f.write(
-            f"""\nc.InteractiveShellApp.exec_lines = [
-                    "import sys",
-                    "sp = f'{prefix}/lib/python{pymaj}.{pymin}/site-packages'",
-                    "if sp not in sys.path:",
-                    "    sys.path.insert(0, sp)",
-                ]
-            """
-        )
-    sitepackages = f"{prefix}/lib/python{pymaj}.{pymin}/site-packages"
-    if sitepackages not in sys.path:
-        sys.path.insert(0, sitepackages)
-
-    print("🩹 Patching environment...")
-    env = env or {}
-    bin_path = f"{prefix}/bin"
-    if bin_path not in os.environ["PATH"]:
-        env["PATH"] = f'"{bin_path}:$PATH"'
-    env["LD_LIBRARY_PATH"] = f'"{prefix}/lib:$LD_LIBRARY_PATH"'
-
-    os.rename(sys.executable, f"{sys.executable}.real")
-    with open(sys.executable, "w") as f:
-        f.write("#!/bin/bash\n")
-        envstr = " ".join(f"{k}={v}" for k, v in env.items())
-        f.write(f"exec env {envstr} {sys.executable}.real -x $@\n")
-    call(["chmod", "+x", sys.executable])
+    _configure_environment(prefix, env)
 
     taken = timedelta(seconds=round((datetime.now() - t0).total_seconds(), 0))
     print(f"⏲ Done in {taken}")
@@ -295,6 +255,165 @@ def check(prefix: os.PathLike = PREFIX, verbose: bool = True):
         print("✨🍰✨ Everything looks OK!")
 
 
+def copy_to_drive(
+    prefix: os.PathLike,
+    filepath: AnyStr = 'condacolab_installation.tar.gz',
+    compress_program: AnyStr = 'gzip',
+):
+    """
+    Copy the conda installation to Google Drive.
+
+    Parameters
+    ----------
+    prefix
+        Target location for the ``conda`` installation on Colab.
+        This should match the ``prefix`` used for the original install.
+    filepath
+        Path to use for the ``conda`` tarball on Google Drive.
+        Default filename is ``condacolab_installation.tar.gz``, located in
+        the base directory of Google Drive.
+    compress_program
+        Pass to ``--use-compress-program`` flag of ``tar``. This sets
+        the compression software. Default is 'gzip'. Conider running
+        ``!apt-get -qq install pigz`` in Colab then setting this parameter
+        to 'pigz' for faster compression speeds.
+    """
+    remote_path = _mount_drive(filepath)
+    print("➡️ Compressing conda directory and copying to Google Drive...")
+    _run(["tar", "-I", compress_program, "-cf", remote_path, prefix])
+    print("✔️ Done")
+
+
+def copy_from_drive(
+    prefix: os.PathLike,
+    filepath: AnyStr = 'condacolab_installation.tar.gz',
+    compress_program: AnyStr = 'gzip',
+    env: Dict[AnyStr, AnyStr] = None,
+    run_checks: bool = True,
+):
+    """
+    Copy a conda installation from Google Drive and setup on Colab.
+
+    Parameters
+    ----------
+    prefix
+        Target location for the ``conda`` installation on Colab.
+        This should match the ``prefix`` used for the original install.
+    filepath
+        Path of the ``conda`` tarball on Google Drive.
+        Default filename is ``condacolab_installation.tar.gz``, located in
+        the base directory of Google Drive.
+    compress_program
+        Pass to ``--use-compress-program`` flag of ``tar``. This sets
+        the decompression software. Default is 'gzip'.
+    env
+        Environment variables to inject in the kernel restart.
+        We *need* to inject ``LD_LIBRARY_PATH`` so ``{PREFIX}/lib``
+        is first, but you can also add more if you need it. Take
+        into account that no quote handling is done, so you need
+        to add those yourself in the raw string. They will
+        end up added to a line like ``exec env VAR=VALUE python3...``.
+        For example, a value with spaces should be passed as::
+
+            env={"VAR": '"a value with spaces"'}
+    run_checks
+        Run checks to see if conda is already present in
+        prefix directory. Change to False to ignore checks
+        and attempt to copy conda from Google Drive.
+    """
+    if run_checks:
+        try:  # run checks to see if conda is already present
+            return check(prefix)
+        except AssertionError:
+            pass  # copy conda from Google Drive
+
+    t0 = datetime.now()
+    remote_path = _mount_drive(filepath)
+    print("⬅️ Copying conda tarball from Google Drive and extracting...")
+    _run(["tar", "-I", compress_program, "-xf", remote_path, "-C", "../"])
+
+    _configure_environment(prefix, env)
+
+    taken = timedelta(seconds=round((datetime.now() - t0).total_seconds(), 0))
+    print(f"⏲ Done in {taken}")
+
+    print("🔁 Restarting kernel...")
+    get_ipython().kernel.do_shutdown(True)
+
+
+def _configure_environment(
+    prefix: os.PathLike,
+    env: Dict[AnyStr, AnyStr],
+):
+    """
+    Configure the environment
+    """
+    print("📌 Adjusting configuration...")
+    cuda_version = ".".join(os.environ.get("CUDA_VERSION", "*.*.*").split(".")[:2])
+    prefix = Path(prefix)
+    condameta = prefix / "conda-meta"
+    condameta.mkdir(parents=True, exist_ok=True)
+    pymaj, pymin = sys.version_info[:2]
+
+    with open(condameta / "pinned", "a") as f:
+        f.write(f"python {pymaj}.{pymin}.*\n")
+        f.write(f"python_abi {pymaj}.{pymin}.* *cp{pymaj}{pymin}*\n")
+        f.write(f"cudatoolkit {cuda_version}.*\n")
+
+    with open(prefix / ".condarc", "a") as f:
+        f.write("always_yes: true\n")
+
+    with open("/etc/ipython/ipython_config.py", "a") as f:
+        f.write(
+            f"""\nc.InteractiveShellApp.exec_lines = [
+                    "import sys",
+                    "sp = f'{prefix}/lib/python{pymaj}.{pymin}/site-packages'",
+                    "if sp not in sys.path:",
+                    "    sys.path.insert(0, sp)",
+                ]
+            """
+        )
+    sitepackages = f"{prefix}/lib/python{pymaj}.{pymin}/site-packages"
+    if sitepackages not in sys.path:
+        sys.path.insert(0, sitepackages)
+
+    print("🩹 Patching environment...")
+    env = env or {}
+    bin_path = f"{prefix}/bin"
+    if bin_path not in os.environ["PATH"]:
+        env["PATH"] = f'"{bin_path}:$PATH"'
+    env["LD_LIBRARY_PATH"] = f'"{prefix}/lib:$LD_LIBRARY_PATH"'
+
+    os.rename(sys.executable, f"{sys.executable}.real")
+    with open(sys.executable, "w") as f:
+        f.write("#!/bin/bash\n")
+        envstr = " ".join(f"{k}={v}" for k, v in env.items())
+        f.write(f"exec env {envstr} {sys.executable}.real -x $@\n")
+    _run(["chmod", "+x", sys.executable])
+
+
+def _mount_drive(filepath: AnyStr):
+    """
+    Mount Google Drive then return the path for the colab tarball.
+    Glob is used to find correct sub-directory of ``/content/drive``
+    (can be ``MyDrive`` or ``My Drive``).
+    """
+    print("🔗 Open link then paste authentication code into box...")
+    google.colab.drive.mount("/content/drive")
+    remote_path = glob("/content/drive/*/")[0]
+    return (f"{remote_path}{filepath}").replace("//", "/")
+
+
+def _run(command: List[str]):
+    """
+    Run subprocess and catch errors.
+    """
+    result = run(command, capture_output=True, text=True)
+    if result.returncode != 0:
+        print(result.stderr)
+    result.check_returncode()
+
+
 __all__ = [
     "install",
     "install_from_url",
@@ -303,5 +422,7 @@ __all__ = [
     "install_miniconda",
     "install_anaconda",
     "check",
+    "copy_to_drive",
+    "copy_from_drive",
     "PREFIX",
 ]
