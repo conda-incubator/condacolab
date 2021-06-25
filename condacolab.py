@@ -117,9 +117,9 @@ def install_from_url(
     print("🩹 Patching environment...")
     env = env or {}
     bin_path = f"{prefix}/bin"
-    if bin_path not in os.environ["PATH"]:
-        env["PATH"] = f'"{bin_path}:$PATH"'
-    env["LD_LIBRARY_PATH"] = f'"{prefix}/lib:$LD_LIBRARY_PATH"'
+    if bin_path not in os.environ.get("PATH", "").split(":"):
+        env["PATH"] = f"{bin_path}:{os.environ.get('PATH', '')}"
+    env["LD_LIBRARY_PATH"] = f"{prefix}/lib:{os.environ.get('LD_LIBRARY_PATH', '')}"
 
     os.rename(sys.executable, f"{sys.executable}.real")
     with open(sys.executable, "w") as f:
