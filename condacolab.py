@@ -116,7 +116,10 @@ def install_from_url(
 
     print("🩹 Patching environment...")
     env = env or {}
-    env["LD_LIBRARY_PATH"] = f'"{prefix}/lib:$LD_LIBRARY_PATH"'
+    bin_path = f"{prefix}/bin"
+    if bin_path not in os.environ.get("PATH", "").split(":"):
+        env["PATH"] = f"{bin_path}:{os.environ.get('PATH', '')}"
+    env["LD_LIBRARY_PATH"] = f"{prefix}/lib:{os.environ.get('LD_LIBRARY_PATH', '')}"
 
     os.rename(sys.executable, f"{sys.executable}.real")
     with open(sys.executable, "w") as f:
@@ -282,6 +285,9 @@ def check(prefix: os.PathLike = PREFIX, verbose: bool = True):
     pymaj, pymin = sys.version_info[:2]
     sitepackages = f"{prefix}/lib/python{pymaj}.{pymin}/site-packages"
     assert sitepackages in sys.path, f"💥💔💥 PYTHONPATH was not patched! Value: {sys.path}"
+    assert (
+        f"{prefix}/bin" in os.environ["PATH"]
+    ), f"💥💔💥 PATH was not patched! Value: {os.environ['PATH']}"
     assert (
         f"{prefix}/lib" in os.environ["LD_LIBRARY_PATH"]
     ), f"💥💔💥 LD_LIBRARY_PATH was not patched! Value: {os.environ['LD_LIBRARY_PATH']}"
