@@ -15,7 +15,7 @@ import sys
 import shutil
 from datetime import datetime, timedelta
 from pathlib import Path
-from subprocess import call, check_output, STDOUT
+from subprocess import run, PIPE, STDOUT
 from typing import Dict, AnyStr
 from urllib.request import urlopen
 from distutils.spawn import find_executable
@@ -82,15 +82,19 @@ def install_from_url(
         shutil.copyfileobj(response, out)
 
     print("📦 Installing...")
-    output = check_output(
+    task = run(
         ["bash", installer_fn, "-bfp", str(prefix)],
+        check=False,
+        stdout=PIPE,
         stderr=STDOUT,
-        universal_newlines=True
+        text=True,
     )
     os.unlink(installer_fn)
-
     with open("condacolab_install.log", "w") as f:
-        f.write(output)
+        f.write(task.stdout)
+    assert (
+        task.returncode == 0
+    ), "💥💔💥 The installation failed! Logs are available at `/content/condacolab_install.log`."
 
     print("📌 Adjusting configuration...")
     cuda_version = ".".join(os.environ.get("CUDA_VERSION", "*.*.*").split(".")[:2])
@@ -133,7 +137,7 @@ def install_from_url(
         f.write("#!/bin/bash\n")
         envstr = " ".join(f"{k}={v}" for k, v in env.items())
         f.write(f"exec env {envstr} {sys.executable}.real -x $@\n")
-    call(["chmod", "+x", sys.executable])
+    run(["chmod", "+x", sys.executable])
 
     taken = timedelta(seconds=round((datetime.now() - t0).total_seconds(), 0))
     print(f"⏲ Done in {taken}")
