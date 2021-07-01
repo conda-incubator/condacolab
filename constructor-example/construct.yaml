@@ -15,7 +15,7 @@ specs:
 
   # Add your dependencies below this line
   # -------------------------------------
-  - flask
+  - flask  # example
 
 # Pip dependencies are NOT recommended. If you do need them
 # uncomment the line below and edit `install-pip-dependencies.sh`.

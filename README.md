@@ -72,7 +72,7 @@ Google Colab runs on Python 3.7. We install the Miniconda distribution on top of
 
 ### How can I cache my installation? I don't want to wait every time I start Colab.
 
-The recommended approach is to build your own `constructor`-based installer. We have provided a template in `construct.tmpl.yml`. Follow these steps:
+The recommended approach is to build your own `constructor`-based installer. We have provided an example in `constructor-example/construct.yaml`. Follow these steps:
 
 1. In your local computer:
 
