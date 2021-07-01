@@ -15,7 +15,7 @@ import sys
 import shutil
 from datetime import datetime, timedelta
 from pathlib import Path
-from subprocess import run, PIPE, STDOUT, CalledProcessError
+from subprocess import run, PIPE, STDOUT
 from typing import Dict, AnyStr
 from urllib.request import urlopen
 from distutils.spawn import find_executable
