@@ -83,17 +83,18 @@ def install_from_url(
 
     print("📦 Installing...")
     task = run(
-            ["bash", installer_fn, "-bfp", str(prefix)],
-            check=False,
-            stdout=PIPE,
-            stderr=STDOUT,
-            text=True,
-        )
+        ["bash", installer_fn, "-bfp", str(prefix)],
+        check=False,
+        stdout=PIPE,
+        stderr=STDOUT,
+        text=True,
+    )
     os.unlink(installer_fn)
     with open("condacolab_install.log", "w") as f:
         f.write(task.stdout)
-    if task.returncode != 0:
-        raise CalledProcessError("💥💔💥 The installation failed! Logs are available at `/content/condacolab_install.log`.")
+    assert (
+        task.returncode == 0
+    ), "💥💔💥 The installation failed! Logs are available at `/content/condacolab_install.log`."
 
     print("📌 Adjusting configuration...")
     cuda_version = ".".join(os.environ.get("CUDA_VERSION", "*.*.*").split(".")[:2])
