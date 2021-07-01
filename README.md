@@ -74,7 +74,7 @@ Google Colab runs on Python 3.7. We install the Miniconda distribution on top of
 
 The recommended approach is to build your own `constructor`-based installer. We have provided an example in `constructor-example/construct.yaml`.
 
-> You can generate a `constructor` installer on Colab too! Follow [this tutorial](#).
+> You can generate a `constructor` installer on Colab too! Follow [this tutorial](https://colab.research.google.com/github/jaimergp/condacolab/blob/main/constructor-example/condacolab_constructor_tutorial.ipynb).
 
 Locally, follow these steps:
 
