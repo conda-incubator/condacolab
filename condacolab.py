@@ -15,7 +15,7 @@ import sys
 import shutil
 from datetime import datetime, timedelta
 from pathlib import Path
-from subprocess import call, check_output, STDOUT
+from subprocess import run, PIPE, STDOUT
 from typing import Dict, AnyStr
 from urllib.request import urlopen
 from distutils.spawn import find_executable
@@ -82,15 +82,17 @@ def install_from_url(
         shutil.copyfileobj(response, out)
 
     print("📦 Installing...")
-    output = check_output(
-        ["bash", installer_fn, "-bfp", str(prefix)],
-        stderr=STDOUT,
-        universal_newlines=True
-    )
+    task = run(
+            ["bash", installer_fn, "-bfp", str(prefix)],
+            check=False,
+            stdout=PIPE,
+            stderr=STDOUT,
+            text=True,
+        )
     os.unlink(installer_fn)
-
     with open("condacolab_install.log", "w") as f:
-        f.write(output)
+        f.write(task.stdout)
+    task.check_returncode()
 
     print("📌 Adjusting configuration...")
     cuda_version = ".".join(os.environ.get("CUDA_VERSION", "*.*.*").split(".")[:2])
