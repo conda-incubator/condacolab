@@ -89,7 +89,7 @@ def install_from_url(
     )
     os.unlink(installer_fn)
 
-    with open("installer_log.txt", "w") as f:
+    with open("condacolab_install.log", "w") as f:
         f.write(output)
 
     print("📌 Adjusting configuration...")
