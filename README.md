@@ -72,7 +72,11 @@ Google Colab runs on Python 3.7. We install the Miniconda distribution on top of
 
 ### How can I cache my installation? I don't want to wait every time I start Colab.
 
-The recommended approach is to build your own `constructor`-based installer. We have provided an example in `constructor-example/construct.yaml`. Follow these steps:
+The recommended approach is to build your own `constructor`-based installer. We have provided an example in `constructor-example/construct.yaml`.
+
+> You can generate a `constructor` installer on Colab too! Follow [this tutorial](#).
+
+Locally, follow these steps:
 
 1. In your local computer:
 
@@ -82,11 +86,11 @@ conda activate constructor
 mkdir my-installer
 cd my-installer
 curl -sLO https://raw.githubusercontent.com/jaimergp/condacolab/main/constructor-example/construct.yaml
-curl -sLO https://raw.githubusercontent.com/jaimergp/condacolab/main/constructor-example/install-pip-dependencies.sh
+curl -sLO https://raw.githubusercontent.com/jaimergp/condacolab/main/constructor-example/pip-dependencies.sh
 ```
 
 2. Add your `conda` packages to `construct.yaml` in the `specs` section. Read the comments to respect the constrains already present! You can also adapt the metadata to your liking.
-3. If you _do_ need to install `pip` requirements, uncomment the `post_install` line and edit `install-pip-dependencies.sh`.
+3. If you _do_ need to install `pip` requirements, uncomment the `post_install` line and edit `pip-dependencies.sh`.
 4. Run `constructor --platform linux-64 .`
 5. Upload the resulting `.sh` to an online location with a permanent URL. GitHub Releases is great for this!
 6. In Colab, run:
