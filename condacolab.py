@@ -15,7 +15,7 @@ import sys
 import shutil
 from datetime import datetime, timedelta
 from pathlib import Path
-from subprocess import call
+from subprocess import call, check_output, STDOUT
 from typing import Dict, AnyStr
 from urllib.request import urlopen
 from distutils.spawn import find_executable
@@ -82,8 +82,15 @@ def install_from_url(
         shutil.copyfileobj(response, out)
 
     print("📦 Installing...")
-    call(["bash", installer_fn, "-bfp", str(prefix)])
+    output = check_output(
+        ["bash", installer_fn, "-bfp", str(prefix)],
+        stderr=STDOUT,
+        universal_newlines=True
+    )
     os.unlink(installer_fn)
+
+    with open("installer_log.txt", "w") as f:
+        f.write(output)
 
     print("📌 Adjusting configuration...")
     cuda_version = ".".join(os.environ.get("CUDA_VERSION", "*.*.*").split(".")[:2])
