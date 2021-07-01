@@ -38,6 +38,8 @@ The default `condacolab.install()` provides Mambaforge, but there are other `con
 
 For advanced users, `install_from_url()` is also available. It expects a URL pointing to a [`constructor`-like installer](https://github.com/conda/constructor), so you can prebuild a Python 3.7 distribution that fulfills your own needs.
 
+> If you want to build your own `constructor`-based installer, check the FAQ below!
+
 Once the installation is done, you can use `conda` and/or `mamba` to install the needed packages:
 
 ```bash
@@ -56,11 +58,45 @@ If you have a environment file (e.g. `environment.yml`), you can use it like thi
 !mamba env update -n base -f environment.yml
 ```
 
-## How does it work
-
-Google Colab runs on Python 3.7. We install the Miniconda distribution on top of the existing one at `/usr/local`, add a few configuration files so we stay with Python 3.7 (`conda` auto updates by default) and the newly installed packages are available. Finally, we wrap the Python executable to redirect and inject some environment variables needed to load the new libraries. Since we need to re-read `LD_LIBRARY_PATH`, a kernel restart is needed.
 
 ## Shortcomings
 
 - The Python kernel needs to be restarted for changes to be applied. This happens automatically. If you are wondering why you are seeing a message saying _"Your session crashed for an unknown reason"_, this is why. You can safely ignore this message!
 - You can only use the `base` environment, so do not try to create more environments with `conda create`.
+
+## FAQ
+
+### How does it work
+
+Google Colab runs on Python 3.7. We install the Miniconda distribution on top of the existing one at `/usr/local`, add a few configuration files so we stay with Python 3.7 (`conda` auto updates by default) and the newly installed packages are available. Finally, we wrap the Python executable to redirect and inject some environment variables needed to load the new libraries. Since we need to re-read `LD_LIBRARY_PATH`, a kernel restart is needed.
+
+### How can I cache my installation? I don't want to wait every time I start Colab.
+
+The recommended approach is to build your own `constructor`-based installer. We have provided an example in `constructor-example/construct.yaml`.
+
+> You can generate a `constructor` installer on Colab too! Follow [this tutorial](https://colab.research.google.com/github/jaimergp/condacolab/blob/main/constructor-example/condacolab_constructor_tutorial.ipynb).
+
+Locally, follow these steps:
+
+1. In your local computer:
+
+```bash
+conda create -n constructor -c conda-forge constructor
+conda activate constructor
+mkdir my-installer
+cd my-installer
+curl -sLO https://raw.githubusercontent.com/jaimergp/condacolab/main/constructor-example/construct.yaml
+curl -sLO https://raw.githubusercontent.com/jaimergp/condacolab/main/constructor-example/pip-dependencies.sh
+```
+
+2. Add your `conda` packages to `construct.yaml` in the `specs` section. Read the comments to respect the constrains already present! You can also adapt the metadata to your liking.
+3. If you _do_ need to install `pip` requirements, uncomment the `post_install` line and edit `pip-dependencies.sh`.
+4. Run `constructor --platform linux-64 .`
+5. Upload the resulting `.sh` to an online location with a permanent URL. GitHub Releases is great for this!
+6. In Colab, run:
+
+```python
+!pip install -q condacolab
+import condacolab
+condacolab.install_from_url(URL_TO_YOUR_CUSTOM_CONSTRUCTOR_INSTALLER)
+```
