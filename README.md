@@ -66,7 +66,7 @@ If you have a environment file (e.g. `environment.yml`), you can use it like thi
 
 ## FAQ
 
-### How does it work
+### How does it work?
 
 Google Colab runs on Python 3.7. We install the Miniconda distribution on top of the existing one at `/usr/local`, add a few configuration files so we stay with Python 3.7 (`conda` auto updates by default) and the newly installed packages are available. Finally, we wrap the Python executable to redirect and inject some environment variables needed to load the new libraries. Since we need to re-read `LD_LIBRARY_PATH`, a kernel restart is needed.
 
@@ -100,3 +100,8 @@ curl -sLO https://raw.githubusercontent.com/jaimergp/condacolab/main/constructor
 import condacolab
 condacolab.install_from_url(URL_TO_YOUR_CUSTOM_CONSTRUCTOR_INSTALLER)
 ```
+
+## Can I install R packages?
+
+Yes, as long as you make sure you also install `rpy2` to overwrite Colab's installation.
+See [issue #26](https://github.com/conda-incubator/condacolab/issues/26) for more details.
