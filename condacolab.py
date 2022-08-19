@@ -274,7 +274,7 @@ def install_anaconda(
         Change to False to ignore checks and always attempt
         to run the installation.
     """
-    installer_url = r"https://repo.anaconda.com/archive/Anaconda3-2020.02-Linux-x86_64.sh"
+    installer_url = r"https://repo.anaconda.com/archive/Anaconda3-2021.11-Linux-x86_64.sh"
     install_from_url(installer_url, prefix=prefix, env=env, run_checks=run_checks)
 
 
