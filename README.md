@@ -31,7 +31,7 @@ condacolab.check()
 
 The default `condacolab.install()` provides Mambaforge, but there are other `conda` distributions to choose from:
 
-- `install_anaconda()`: This will install the Anaconda 2021.11 distribution, the last version that was built for Python 3.7. This contains [plenty of data science packages](https://docs.anaconda.com/anaconda/packages/old-pkg-lists/2021.11/py3.7_linux-64/), but they might be outdated by now.
+- `install_anaconda()`: This will install the Anaconda 2022.05 distribution, the most recent version built for Python 3.7 at the time of update. This contains [plenty of data science packages (link to current version docs))](https://docs.anaconda.com/anaconda/packages/py3.7_linux-64/).
 - `install_miniconda()`: This will install the Miniconda 4.12.0 distribution, using a version built for Python 3.7. Unlike Anaconda, this distribution only contains `python` and `conda`.
 - `install_miniforge()`: Like Miniconda, but built off `conda-forge` packages. The Miniforge distribution is officially provided by [conda-forge](https://github.com/conda-forge/miniforge) but I [forked and patched it](https://github.com/jaimergp/miniforge) so it's built for Python 3.7.
 - `install_mambaforge()`: Like Miniforge, but with `mamba` included. The Mambaforge distribution is officially provided by [conda-forge](https://github.com/conda-forge/miniforge) but I [forked and patched it](https://github.com/jaimergp/miniforge) so it's built for Python 3.7.
