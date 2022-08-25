@@ -223,7 +223,7 @@ def install_miniconda(
     prefix: os.PathLike = PREFIX, env: Dict[AnyStr, AnyStr] = None, run_checks: bool = True
 ):
     """
-    Install Miniconda 4.9.2 for Python 3.7.
+    Install Miniconda 4.12.0 for Python 3.7.
 
     Parameters
     ----------
