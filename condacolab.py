@@ -16,6 +16,7 @@ import shutil
 from datetime import datetime, timedelta
 from pathlib import Path
 from subprocess import run, PIPE, STDOUT
+from textwrap import dedent
 from typing import Dict, AnyStr
 from urllib.request import urlopen
 from distutils.spawn import find_executable
@@ -52,6 +53,32 @@ def on_button_clicked(b):
     get_ipython().kernel.do_shutdown(True)
     print("Kernel restarted!")
     restart_kernel_button.close()
+
+def run_subprocess(bash_command, logs_filename):
+    """
+    Run subprocess then write the logs for that process and raise errors if it fails.
+
+        Parameters
+        ----------
+        bash_command
+            Bash command to run while installing the packages.
+
+        logs_filename
+            Name of the file to be used for writing the logs after running the task.
+
+    """
+    task = run(
+            bash_command,
+            check=False,
+            stdout=PIPE,
+            stderr=STDOUT,
+            text=True,
+        )
+
+    with open(logs_filename, "w") as f:
+        f.write(task.stdout)
+    assert ( task.returncode == 0), f"💥💔💥 The installation failed! Logs are available at `/content/{logs_filename}`."
+
 
 def install_from_url(
     installer_url: AnyStr,
@@ -101,46 +128,31 @@ def install_from_url(
         shutil.copyfileobj(response, out)
 
     print("📦 Installing...")
-    task = run(
-        ["bash", installer_fn, "-bfp", str(prefix)],
-        check=False,
-        stdout=PIPE,
-        stderr=STDOUT,
-        text=True,
-    )
 
-    # installing google.colab packages, matplortlib-base and psutil.
+    condacolab_task = run_subprocess(
+        ["bash", installer_fn, "-bfp", str(prefix)],
+        "condacolab_install.log",
+        )
+
+    """
+    Installing the following packages because Colab server expects these packages to be installed in order to launch a Python kernel :
+        - matplotlib-base
+        - psutil
+        - google-colab
+        - colabtools
+    """
 
     conda_exe = "mamba" if os.path.isfile(f"{prefix}/bin/mamba") else "conda"
 
-    psutil_task = run(
+    conda_task = run_subprocess(
         [f"{prefix}/bin/{conda_exe}", "install", "-yq", "matplotlib-base", "psutil", "google-colab"],
-        check=False,
-        stdout=PIPE,
-        stderr=STDOUT,
-        text=True,
-    )
+        "conda_task.log"
+        )
 
-    colab_task = run(
-        [f"{prefix}/bin/python", "-m", "pip", "-q", "install", "https://github.com/googlecolab/colabtools/archive/refs/heads/main.zip", "condacolab"],
-        check=False,
-        stdout=PIPE,
-        stderr=STDOUT,
-        text=True,
-    )
-
-    os.unlink(installer_fn)
-    with open("condacolab_install.log", "w") as f:
-        f.write(task.stdout)
-    with open("colab_task.log", "w") as f:
-        f.write(colab_task.stdout)
-    with open("psutil_task.log", "w") as f:
-        f.write(psutil_task.stdout)
-    assert (
-        task.returncode == 0 and
-        colab_task.returncode  == 0 and
-        psutil_task.returncode == 0
-    ), "💥💔💥 The installation failed! Logs are available at `/content/condacolab_install.log`."
+    pip_task = run_subprocess(
+        [f"{prefix}/bin/python", "-m", "pip", "-q", "install", "-U", "https://github.com/googlecolab/colabtools/archive/refs/heads/main.zip", "condacolab"],
+        "pip_task.log"
+        )
 
     print("📌 Adjusting configuration...")
     cuda_version = ".".join(os.environ.get("CUDA_VERSION", "*.*.*").split(".")[:2])
@@ -174,13 +186,19 @@ def install_from_url(
     env = env or {}
     bin_path = f"{prefix}/bin"
 
-    os.rename(sys.executable, f"{sys.executable}.real")
+    os.rename(sys.executable, f"{sys.executable}.renamed_by_condacolab.bak")
     with open(sys.executable, "w") as f:
-        f.write("#!/bin/bash\n")
-        f.write(f"source {prefix}/etc/profile.d/conda.sh\n")
-        f.write("conda activate\n")
-        f.write(f"unset PYTHONPATH\n")
-        f.write(f"exec {bin_path}/python $@\n")
+        f.write(
+            dedent(
+                f"""
+                #!/bin/bash
+                source {prefix}/etc/profile.d/conda.sh
+                conda activate
+                unset PYTHONPATH
+                exec {bin_path}/python $@
+                """
+            ).lstrip()
+        )
     run(["chmod", "+x", sys.executable])
 
     taken = timedelta(seconds=round((datetime.now() - t0).total_seconds(), 0))
