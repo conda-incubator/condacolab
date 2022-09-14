@@ -367,13 +367,15 @@ def check(prefix: os.PathLike = PREFIX, verbose: bool = True):
     pymaj, pymin = sys.version_info[:2]
     sitepackages = f"{prefix}/lib/python{pymaj}.{pymin}/site-packages"
     assert sitepackages in sys.path, f"💥💔💥 PYTHONPATH was not patched! Value: {sys.path}"
-    assert "/usr/local/" not in sys.path, "💥💔💥 There is some problem with installation!"
+    assert all(
+        not path.startswith("/usr/local/") for path in sys.path
+    ), f"💥💔💥 PYTHONPATH include system locations: {[path for path in sys.path if path.startswith('/usr/local')]}!"
     assert (
         f"{prefix}/bin" in os.environ["PATH"]
     ), f"💥💔💥 PATH was not patched! Value: {os.environ['PATH']}"
     assert (
-    prefix == os.environ["CONDA_PREFIX"],
-    ), f"💥💔💥 CONDA_PREFIX Value: {os.environ['CONDA_PREFIX']} does not match conda installation location {prefix}!"
+    prefix == os.environ.get("CONDA_PREFIX"),
+    ), f"💥💔💥 CONDA_PREFIX value: {os.environ.get('CONDA_PREFIX', '<not set>')} does not match conda installation location {prefix}!"
 
     if verbose:
         print("✨🍰✨ Everything looks OK!")
