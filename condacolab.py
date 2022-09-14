@@ -77,7 +77,7 @@ def run_subprocess(bash_command, logs_filename):
 
     with open(logs_filename, "w") as f:
         f.write(task.stdout)
-    assert ( task.returncode == 0), f"💥💔💥 The installation failed! Logs are available at `/content/{logs_filename}`."
+    assert (task.returncode == 0), f"💥💔💥 The installation failed! Logs are available at `/content/{logs_filename}`."
 
 
 def install_from_url(
@@ -367,12 +367,14 @@ def check(prefix: os.PathLike = PREFIX, verbose: bool = True):
     pymaj, pymin = sys.version_info[:2]
     sitepackages = f"{prefix}/lib/python{pymaj}.{pymin}/site-packages"
     assert sitepackages in sys.path, f"💥💔💥 PYTHONPATH was not patched! Value: {sys.path}"
+    assert "/usr/local/" not in sys.path, "💥💔💥 There is some problem with installation!"
     assert (
         f"{prefix}/bin" in os.environ["PATH"]
     ), f"💥💔💥 PATH was not patched! Value: {os.environ['PATH']}"
     assert (
-        f"{prefix}/lib" in os.environ["LD_LIBRARY_PATH"]
-    ), f"💥💔💥 LD_LIBRARY_PATH was not patched! Value: {os.environ['LD_LIBRARY_PATH']}"
+    prefix == os.environ["CONDA_PREFIX"],
+    ), f"💥💔💥 CONDA_PREFIX Value: {os.environ['CONDA_PREFIX']} does not match conda installation location {prefix}!"
+
     if verbose:
         print("✨🍰✨ Everything looks OK!")
 
