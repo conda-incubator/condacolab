@@ -195,6 +195,7 @@ def install_from_url(
                 source {prefix}/etc/profile.d/conda.sh
                 conda activate
                 unset PYTHONPATH
+                mv /usr/bin/lsb_release /usr/bin/lsb_release_back
                 exec {bin_path}/python $@
                 """
             ).lstrip()
