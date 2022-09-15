@@ -10,12 +10,13 @@ Usage:
 For more details, check the docstrings for ``install_from_url()``.
 """
 
+import json
 import os
 import sys
 import shutil
 from datetime import datetime, timedelta
 from pathlib import Path
-from subprocess import run, PIPE, STDOUT
+from subprocess import check_output, run, PIPE, STDOUT
 from textwrap import dedent
 from typing import Dict, AnyStr
 from urllib.request import urlopen
@@ -54,21 +55,21 @@ def on_button_clicked(b):
     print("Kernel restarted!")
     restart_kernel_button.close()
 
-def run_subprocess(bash_command, logs_filename):
+def run_subprocess(command, logs_filename):
     """
     Run subprocess then write the logs for that process and raise errors if it fails.
 
         Parameters
         ----------
-        bash_command
-            Bash command to run while installing the packages.
+        command
+            Command to run while installing the packages.
 
         logs_filename
             Name of the file to be used for writing the logs after running the task.
 
     """
     task = run(
-            bash_command,
+            command,
             check=False,
             stdout=PIPE,
             stderr=STDOUT,
@@ -134,19 +135,28 @@ def install_from_url(
         "condacolab_install.log",
         )
 
-    """
-    Installing the following packages because Colab server expects these packages to be installed in order to launch a Python kernel :
-        - matplotlib-base
-        - psutil
-        - google-colab
-        - colabtools
-    """
+# Installing the following packages because Colab server expects these packages to be installed in order to launch a Python kernel:
+#     - matplotlib-base
+#     - psutil
+#     - google-colab
+#     - colabtools
 
     conda_exe = "mamba" if os.path.isfile(f"{prefix}/bin/mamba") else "conda"
 
-    conda_task = run_subprocess(
-        [f"{prefix}/bin/{conda_exe}", "install", "-yq", "matplotlib-base", "psutil", "google-colab"],
-        "conda_task.log"
+    # check if any of those packages are already installed. If it is installed, remove it from the list of required packages.
+
+    output = check_output([f"{prefix}/bin/conda", "list", "--json"])
+    payload = json.loads(output)
+    installed_names = [pkg["name"] for pkg in payload] 
+    required_packages = ["matplotlib-base", "psutil", "google-colab"]
+    for pkg in required_packages.copy():
+        if pkg in installed_names:
+            required_packages.remove(pkg)
+
+    if required_packages:
+        run_subprocess( 
+            [f"{prefix}/bin/{conda_exe}", "install", "-yq", *required_packages],
+            "conda_task.log",
         )
 
     pip_task = run_subprocess(
@@ -195,7 +205,7 @@ def install_from_url(
                 source {prefix}/etc/profile.d/conda.sh
                 conda activate
                 unset PYTHONPATH
-                mv /usr/bin/lsb_release /usr/bin/lsb_release_back
+                mv /usr/bin/lsb_release /usr/bin/lsb_release.renamed_by_condacolab.bak
                 exec {bin_path}/python $@
                 """
             ).lstrip()
