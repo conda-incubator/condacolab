@@ -19,10 +19,15 @@ from subprocess import run, PIPE, STDOUT
 from typing import Dict, AnyStr
 from urllib.request import urlopen
 from distutils.spawn import find_executable
-import ipywidgets as widgets
 from IPython.display import display
 
 from IPython import get_ipython
+
+try:
+    import ipywidgets as widgets
+    HAS_IPYWIDGETS = True
+except ImportError:
+    HAS_IPYWIDGETS = False
 
 try:
     import google.colab
@@ -36,9 +41,9 @@ __author__ = "Jaime Rodríguez-Guerra <jaimergp@users.noreply.github.com>"
 
 PREFIX = "/usr/local"
 
-
-restart_kernel_button = widgets.Button(description="Restart kernel now...")
-restart_button_output = widgets.Output(layout={'border': '1px solid black'})
+if HAS_IPYWIDGETS:
+    restart_kernel_button = widgets.Button(description="Restart kernel now...")
+    restart_button_output = widgets.Output(layout={'border': '1px solid black'})
 
 def on_button_clicked(b):
   with restart_button_output:
@@ -157,10 +162,14 @@ def install_from_url(
     if restart_kernel:
         print("🔁 Restarting kernel...")
         get_ipython().kernel.do_shutdown(True)
-    else:
+
+    elif HAS_IPYWIDGETS:
         print("🔁 Please restart kernel...")
         restart_kernel_button.on_click(on_button_clicked)
         display(restart_kernel_button, restart_button_output)
+
+    else:
+        print("🔁 Please restart kernel by clicking on Runtime > Restart runtime.")
 
 def install_mambaforge(
     prefix: os.PathLike = PREFIX, env: Dict[AnyStr, AnyStr] = None, run_checks: bool = True, restart_kernel: bool = True,
