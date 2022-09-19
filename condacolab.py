@@ -42,6 +42,7 @@ __author__ = "Jaime Rodríguez-Guerra <jaimergp@users.noreply.github.com>"
 PREFIX = "/usr/local"
 
 if HAS_IPYWIDGETS:
+    restart_kernel_button = widgets.Button(description="Restart kernel now...")
     restart_button_output = widgets.Output(layout={'border': '1px solid black'})
 else:
     restart_kernel_button = restart_button_output = None
