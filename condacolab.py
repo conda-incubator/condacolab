@@ -19,8 +19,15 @@ from subprocess import run, PIPE, STDOUT
 from typing import Dict, AnyStr
 from urllib.request import urlopen
 from distutils.spawn import find_executable
+from IPython.display import display
 
 from IPython import get_ipython
+
+try:
+    import ipywidgets as widgets
+    HAS_IPYWIDGETS = True
+except ImportError:
+    HAS_IPYWIDGETS = False
 
 try:
     import google.colab
@@ -34,12 +41,24 @@ __author__ = "Jaime Rodríguez-Guerra <jaimergp@users.noreply.github.com>"
 
 PREFIX = "/usr/local"
 
+if HAS_IPYWIDGETS:
+    restart_kernel_button = widgets.Button(description="Restart kernel now...")
+    restart_button_output = widgets.Output(layout={'border': '1px solid black'})
+else:
+    restart_kernel_button = restart_button_output = None
+
+def on_button_clicked(b):
+  with restart_button_output:
+    get_ipython().kernel.do_shutdown(True)
+    print("Kernel restarted!")
+    restart_kernel_button.close()
 
 def install_from_url(
     installer_url: AnyStr,
     prefix: os.PathLike = PREFIX,
     env: Dict[AnyStr, AnyStr] = None,
     run_checks: bool = True,
+    restart_kernel: bool = True,
 ):
     """
     Download and run a constructor-like installer, patching
@@ -142,12 +161,20 @@ def install_from_url(
     taken = timedelta(seconds=round((datetime.now() - t0).total_seconds(), 0))
     print(f"⏲ Done in {taken}")
 
-    print("🔁 Restarting kernel...")
-    get_ipython().kernel.do_shutdown(True)
+    if restart_kernel:
+        print("🔁 Restarting kernel...")
+        get_ipython().kernel.do_shutdown(True)
 
+    elif HAS_IPYWIDGETS:
+        print("🔁 Please restart kernel...")
+        restart_kernel_button.on_click(on_button_clicked)
+        display(restart_kernel_button, restart_button_output)
+
+    else:
+        print("🔁 Please restart kernel by clicking on Runtime > Restart runtime.")
 
 def install_mambaforge(
-    prefix: os.PathLike = PREFIX, env: Dict[AnyStr, AnyStr] = None, run_checks: bool = True
+    prefix: os.PathLike = PREFIX, env: Dict[AnyStr, AnyStr] = None, run_checks: bool = True, restart_kernel: bool = True,
 ):
     """
     Install Mambaforge, built for Python 3.7.
@@ -178,7 +205,7 @@ def install_mambaforge(
         to run the installation.
     """
     installer_url = r"https://github.com/jaimergp/miniforge/releases/latest/download/Mambaforge-colab-Linux-x86_64.sh"
-    install_from_url(installer_url, prefix=prefix, env=env, run_checks=run_checks)
+    install_from_url(installer_url, prefix=prefix, env=env, run_checks=run_checks, restart_kernel=restart_kernel)
 
 
 # Make mambaforge the default
@@ -186,7 +213,7 @@ install = install_mambaforge
 
 
 def install_miniforge(
-    prefix: os.PathLike = PREFIX, env: Dict[AnyStr, AnyStr] = None, run_checks: bool = True
+    prefix: os.PathLike = PREFIX, env: Dict[AnyStr, AnyStr] = None, run_checks: bool = True, restart_kernel: bool = True,
 ):
     """
     Install Mambaforge, built for Python 3.7.
@@ -216,11 +243,11 @@ def install_miniforge(
         to run the installation.
     """
     installer_url = r"https://github.com/jaimergp/miniforge/releases/latest/download/Miniforge-colab-Linux-x86_64.sh"
-    install_from_url(installer_url, prefix=prefix, env=env, run_checks=run_checks)
+    install_from_url(installer_url, prefix=prefix, env=env, run_checks=run_checks, restart_kernel=restart_kernel)
 
 
 def install_miniconda(
-    prefix: os.PathLike = PREFIX, env: Dict[AnyStr, AnyStr] = None, run_checks: bool = True
+    prefix: os.PathLike = PREFIX, env: Dict[AnyStr, AnyStr] = None, run_checks: bool = True, restart_kernel: bool = True,
 ):
     """
     Install Miniconda 4.12.0 for Python 3.7.
@@ -245,11 +272,11 @@ def install_miniconda(
         to run the installation.
     """
     installer_url = r"https://repo.anaconda.com/miniconda/Miniconda3-py37_4.12.0-Linux-x86_64.sh"
-    install_from_url(installer_url, prefix=prefix, env=env, run_checks=run_checks)
+    install_from_url(installer_url, prefix=prefix, env=env, run_checks=run_checks, restart_kernel=restart_kernel)
 
 
 def install_anaconda(
-    prefix: os.PathLike = PREFIX, env: Dict[AnyStr, AnyStr] = None, run_checks: bool = True
+    prefix: os.PathLike = PREFIX, env: Dict[AnyStr, AnyStr] = None, run_checks: bool = True, restart_kernel: bool = True,
 ):
     """
     Install Anaconda 2022.05, the latest version built
@@ -275,7 +302,7 @@ def install_anaconda(
         to run the installation.
     """
     installer_url = r"https://repo.anaconda.com/archive/Anaconda3-2022.05-Linux-x86_64.sh"
-    install_from_url(installer_url, prefix=prefix, env=env, run_checks=run_checks)
+    install_from_url(installer_url, prefix=prefix, env=env, run_checks=run_checks, restart_kernel=restart_kernel)
 
 
 def check(prefix: os.PathLike = PREFIX, verbose: bool = True):
