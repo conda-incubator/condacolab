@@ -49,25 +49,25 @@ if HAS_IPYWIDGETS:
 else:
     restart_kernel_button = restart_button_output = None
 
-def on_button_clicked(b):
+def _on_button_clicked(b):
   with restart_button_output:
     get_ipython().kernel.do_shutdown(True)
     print("Kernel restarted!")
     restart_kernel_button.close()
 
-def run_subprocess(command, logs_filename):
+def _run_subprocess(command, logs_filename):
     """
     Run subprocess then write the logs for that process and raise errors if it fails.
 
-        Parameters
-        ----------
-        command
-            Command to run while installing the packages.
+    Parameters
+    ----------
+    command
+        Command to run while installing the packages.
 
-        logs_filename
-            Name of the file to be used for writing the logs after running the task.
-
+    logs_filename
+        Name of the file to be used for writing the logs after running the task.
     """
+
     task = run(
             command,
             check=False,
@@ -76,7 +76,7 @@ def run_subprocess(command, logs_filename):
             text=True,
         )
 
-    with open(logs_filename, "w") as f:
+    with open(f"/content/{logs_filename}", "w") as f:
         f.write(task.stdout)
     assert (task.returncode == 0), f"💥💔💥 The installation failed! Logs are available at `/content/{logs_filename}`."
 
@@ -130,7 +130,7 @@ def install_from_url(
 
     print("📦 Installing...")
 
-    condacolab_task = run_subprocess(
+    condacolab_task = _run_subprocess(
         ["bash", installer_fn, "-bfp", str(prefix)],
         "condacolab_install.log",
         )
@@ -154,12 +154,12 @@ def install_from_url(
             required_packages.remove(pkg)
 
     if required_packages:
-        run_subprocess( 
+        _run_subprocess(
             [f"{prefix}/bin/{conda_exe}", "install", "-yq", *required_packages],
             "conda_task.log",
         )
 
-    pip_task = run_subprocess(
+    pip_task = _run_subprocess(
         [f"{prefix}/bin/python", "-m", "pip", "-q", "install", "-U", "https://github.com/googlecolab/colabtools/archive/refs/heads/main.zip", "condacolab"],
         "pip_task.log"
         )
@@ -221,7 +221,7 @@ def install_from_url(
 
     elif HAS_IPYWIDGETS:
         print("🔁 Please restart kernel...")
-        restart_kernel_button.on_click(on_button_clicked)
+        restart_kernel_button.on_click(_on_button_clicked)
         display(restart_kernel_button, restart_button_output)
 
     else:
@@ -384,7 +384,7 @@ def check(prefix: os.PathLike = PREFIX, verbose: bool = True):
         f"{prefix}/bin" in os.environ["PATH"]
     ), f"💥💔💥 PATH was not patched! Value: {os.environ['PATH']}"
     assert (
-    prefix == os.environ.get("CONDA_PREFIX"),
+        prefix == os.environ.get("CONDA_PREFIX")
     ), f"💥💔💥 CONDA_PREFIX value: {os.environ.get('CONDA_PREFIX', '<not set>')} does not match conda installation location {prefix}!"
 
     if verbose:
