@@ -38,8 +38,10 @@ except ImportError:
 
 
 __version__ = "0.1.4"
-__author__ = "Jaime Rodríguez-Guerra <jaimergp@users.noreply.github.com>"
-__author__= "Surbhi Sharma <ssurbhi560@users.noreply.github.com>"
+__author__ = (
+    "Jaime Rodríguez-Guerra <jaimergp@users.noreply.github.com>, "
+    "Surbhi Sharma <ssurbhi560@users.noreply.github.com>"
+)
 
 
 PREFIX = "/opt/conda"
