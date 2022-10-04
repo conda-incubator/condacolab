@@ -10,12 +10,14 @@ Usage:
 For more details, check the docstrings for ``install_from_url()``.
 """
 
+import json
 import os
 import sys
 import shutil
 from datetime import datetime, timedelta
 from pathlib import Path
-from subprocess import run, PIPE, STDOUT
+from subprocess import check_output, run, PIPE, STDOUT
+from textwrap import dedent
 from typing import Dict, AnyStr
 from urllib.request import urlopen
 from distutils.spawn import find_executable
@@ -36,10 +38,13 @@ except ImportError:
 
 
 __version__ = "0.1.4"
-__author__ = "Jaime Rodríguez-Guerra <jaimergp@users.noreply.github.com>"
+__author__ = (
+    "Jaime Rodríguez-Guerra <jaimergp@users.noreply.github.com>, "
+    "Surbhi Sharma <ssurbhi560@users.noreply.github.com>"
+)
 
 
-PREFIX = "/usr/local"
+PREFIX = "/opt/conda"
 
 if HAS_IPYWIDGETS:
     restart_kernel_button = widgets.Button(description="Restart kernel now...")
@@ -47,11 +52,37 @@ if HAS_IPYWIDGETS:
 else:
     restart_kernel_button = restart_button_output = None
 
-def on_button_clicked(b):
+def _on_button_clicked(b):
   with restart_button_output:
     get_ipython().kernel.do_shutdown(True)
     print("Kernel restarted!")
     restart_kernel_button.close()
+
+def _run_subprocess(command, logs_filename):
+    """
+    Run subprocess then write the logs for that process and raise errors if it fails.
+
+    Parameters
+    ----------
+    command
+        Command to run while installing the packages.
+
+    logs_filename
+        Name of the file to be used for writing the logs after running the task.
+    """
+
+    task = run(
+            command,
+            check=False,
+            stdout=PIPE,
+            stderr=STDOUT,
+            text=True,
+        )
+
+    with open(f"/content/{logs_filename}", "w") as f:
+        f.write(task.stdout)
+    assert (task.returncode == 0), f"💥💔💥 The installation failed! Logs are available at `/content/{logs_filename}`."
+
 
 def install_from_url(
     installer_url: AnyStr,
@@ -101,19 +132,40 @@ def install_from_url(
         shutil.copyfileobj(response, out)
 
     print("📦 Installing...")
-    task = run(
+
+    condacolab_task = _run_subprocess(
         ["bash", installer_fn, "-bfp", str(prefix)],
-        check=False,
-        stdout=PIPE,
-        stderr=STDOUT,
-        text=True,
-    )
-    os.unlink(installer_fn)
-    with open("condacolab_install.log", "w") as f:
-        f.write(task.stdout)
-    assert (
-        task.returncode == 0
-    ), "💥💔💥 The installation failed! Logs are available at `/content/condacolab_install.log`."
+        "condacolab_install.log",
+        )
+
+# Installing the following packages because Colab server expects these packages to be installed in order to launch a Python kernel:
+#     - matplotlib-base
+#     - psutil
+#     - google-colab
+#     - colabtools
+
+    conda_exe = "mamba" if os.path.isfile(f"{prefix}/bin/mamba") else "conda"
+
+    # check if any of those packages are already installed. If it is installed, remove it from the list of required packages.
+
+    output = check_output([f"{prefix}/bin/conda", "list", "--json"])
+    payload = json.loads(output)
+    installed_names = [pkg["name"] for pkg in payload] 
+    required_packages = ["matplotlib-base", "psutil", "google-colab"]
+    for pkg in required_packages.copy():
+        if pkg in installed_names:
+            required_packages.remove(pkg)
+
+    if required_packages:
+        _run_subprocess(
+            [f"{prefix}/bin/{conda_exe}", "install", "-yq", *required_packages],
+            "conda_task.log",
+        )
+
+    pip_task = _run_subprocess(
+        [f"{prefix}/bin/python", "-m", "pip", "-q", "install", "-U", "https://github.com/googlecolab/colabtools/archive/refs/heads/main.zip", "condacolab"],
+        "pip_task.log"
+        )
 
     print("📌 Adjusting configuration...")
     cuda_version = ".".join(os.environ.get("CUDA_VERSION", "*.*.*").split(".")[:2])
@@ -144,18 +196,23 @@ def install_from_url(
     if sitepackages not in sys.path:
         sys.path.insert(0, sitepackages)
 
-    print("🩹 Patching environment...")
     env = env or {}
     bin_path = f"{prefix}/bin"
-    if bin_path not in os.environ.get("PATH", "").split(":"):
-        env["PATH"] = f"{bin_path}:{os.environ.get('PATH', '')}"
-    env["LD_LIBRARY_PATH"] = f"{prefix}/lib:{os.environ.get('LD_LIBRARY_PATH', '')}"
 
-    os.rename(sys.executable, f"{sys.executable}.real")
+    os.rename(sys.executable, f"{sys.executable}.renamed_by_condacolab.bak")
     with open(sys.executable, "w") as f:
-        f.write("#!/bin/bash\n")
-        envstr = " ".join(f"{k}={v}" for k, v in env.items())
-        f.write(f"exec env {envstr} {sys.executable}.real -x $@\n")
+        f.write(
+            dedent(
+                f"""
+                #!/bin/bash
+                source {prefix}/etc/profile.d/conda.sh
+                conda activate
+                unset PYTHONPATH
+                mv /usr/bin/lsb_release /usr/bin/lsb_release.renamed_by_condacolab.bak
+                exec {bin_path}/python $@
+                """
+            ).lstrip()
+        )
     run(["chmod", "+x", sys.executable])
 
     taken = timedelta(seconds=round((datetime.now() - t0).total_seconds(), 0))
@@ -167,7 +224,7 @@ def install_from_url(
 
     elif HAS_IPYWIDGETS:
         print("🔁 Please restart kernel...")
-        restart_kernel_button.on_click(on_button_clicked)
+        restart_kernel_button.on_click(_on_button_clicked)
         display(restart_kernel_button, restart_button_output)
 
     else:
@@ -323,12 +380,16 @@ def check(prefix: os.PathLike = PREFIX, verbose: bool = True):
     pymaj, pymin = sys.version_info[:2]
     sitepackages = f"{prefix}/lib/python{pymaj}.{pymin}/site-packages"
     assert sitepackages in sys.path, f"💥💔💥 PYTHONPATH was not patched! Value: {sys.path}"
+    assert all(
+        not path.startswith("/usr/local/") for path in sys.path
+    ), f"💥💔💥 PYTHONPATH include system locations: {[path for path in sys.path if path.startswith('/usr/local')]}!"
     assert (
         f"{prefix}/bin" in os.environ["PATH"]
     ), f"💥💔💥 PATH was not patched! Value: {os.environ['PATH']}"
     assert (
-        f"{prefix}/lib" in os.environ["LD_LIBRARY_PATH"]
-    ), f"💥💔💥 LD_LIBRARY_PATH was not patched! Value: {os.environ['LD_LIBRARY_PATH']}"
+        prefix == os.environ.get("CONDA_PREFIX")
+    ), f"💥💔💥 CONDA_PREFIX value: {os.environ.get('CONDA_PREFIX', '<not set>')} does not match conda installation location {prefix}!"
+
     if verbose:
         print("✨🍰✨ Everything looks OK!")
 
