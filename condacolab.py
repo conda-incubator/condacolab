@@ -90,6 +90,7 @@ def install_from_url(
     env: Dict[AnyStr, AnyStr] = None,
     run_checks: bool = True,
     restart_kernel: bool = True,
+    environment_file: str = None,
 ):
     """
     Download and run a constructor-like installer, patching
@@ -118,6 +119,11 @@ def install_from_url(
         Run checks to see if installation was run previously.
         Change to False to ignore checks and always attempt
         to run the installation.
+
+    environment_file
+        Path or URL of the environment.yaml file you want to use for
+        update the conda enviornment.
+
     """
     if run_checks:
         try:  # run checks to see if it this was run already
@@ -150,7 +156,7 @@ def install_from_url(
 
     output = check_output([f"{prefix}/bin/conda", "list", "--json"])
     payload = json.loads(output)
-    installed_names = [pkg["name"] for pkg in payload] 
+    installed_names = [pkg["name"] for pkg in payload]
     required_packages = ["matplotlib-base", "psutil", "google-colab"]
     for pkg in required_packages.copy():
         if pkg in installed_names:
@@ -167,34 +173,28 @@ def install_from_url(
         "pip_task.log"
         )
 
+
+    # if environment.yaml file is provided use that to update the conda base environment.
+
+    if environment_file:
+        print("📦 Updating environment using environment.yaml file...")
+        _run_subprocess(
+            [f"{prefix}/bin/{conda_exe}","env", "update", "-n", "base", "-f", environment_file],
+            "environment_update.log",
+        )
+        print("Environment update done.")
+
     print("📌 Adjusting configuration...")
     cuda_version = ".".join(os.environ.get("CUDA_VERSION", "*.*.*").split(".")[:2])
     prefix = Path(prefix)
     condameta = prefix / "conda-meta"
     condameta.mkdir(parents=True, exist_ok=True)
-    pymaj, pymin = sys.version_info[:2]
 
     with open(condameta / "pinned", "a") as f:
-        f.write(f"python {pymaj}.{pymin}.*\n")
-        f.write(f"python_abi {pymaj}.{pymin}.* *cp{pymaj}{pymin}*\n")
         f.write(f"cudatoolkit {cuda_version}.*\n")
 
     with open(prefix / ".condarc", "a") as f:
         f.write("always_yes: true\n")
-
-    with open("/etc/ipython/ipython_config.py", "a") as f:
-        f.write(
-            f"""\nc.InteractiveShellApp.exec_lines = [
-                    "import sys",
-                    "sp = f'{prefix}/lib/python{pymaj}.{pymin}/site-packages'",
-                    "if sp not in sys.path:",
-                    "    sys.path.insert(0, sp)",
-                ]
-            """
-        )
-    sitepackages = f"{prefix}/lib/python{pymaj}.{pymin}/site-packages"
-    if sitepackages not in sys.path:
-        sys.path.insert(0, sitepackages)
 
     env = env or {}
     bin_path = f"{prefix}/bin"
@@ -231,7 +231,7 @@ def install_from_url(
         print("🔁 Please restart kernel by clicking on Runtime > Restart runtime.")
 
 def install_mambaforge(
-    prefix: os.PathLike = PREFIX, env: Dict[AnyStr, AnyStr] = None, run_checks: bool = True, restart_kernel: bool = True,
+    prefix: os.PathLike = PREFIX, env: Dict[AnyStr, AnyStr] = None, run_checks: bool = True, restart_kernel: bool = True, environment_file: str = None,
 ):
     """
     Install Mambaforge, built for Python 3.7.
@@ -262,7 +262,7 @@ def install_mambaforge(
         to run the installation.
     """
     installer_url = r"https://github.com/jaimergp/miniforge/releases/latest/download/Mambaforge-colab-Linux-x86_64.sh"
-    install_from_url(installer_url, prefix=prefix, env=env, run_checks=run_checks, restart_kernel=restart_kernel)
+    install_from_url(installer_url, prefix=prefix, env=env, run_checks=run_checks, restart_kernel=restart_kernel, environment_file=environment_file,)
 
 
 # Make mambaforge the default
@@ -270,7 +270,7 @@ install = install_mambaforge
 
 
 def install_miniforge(
-    prefix: os.PathLike = PREFIX, env: Dict[AnyStr, AnyStr] = None, run_checks: bool = True, restart_kernel: bool = True,
+    prefix: os.PathLike = PREFIX, env: Dict[AnyStr, AnyStr] = None, run_checks: bool = True, restart_kernel: bool = True, environment_file: str = None,
 ):
     """
     Install Mambaforge, built for Python 3.7.
@@ -300,11 +300,11 @@ def install_miniforge(
         to run the installation.
     """
     installer_url = r"https://github.com/jaimergp/miniforge/releases/latest/download/Miniforge-colab-Linux-x86_64.sh"
-    install_from_url(installer_url, prefix=prefix, env=env, run_checks=run_checks, restart_kernel=restart_kernel)
+    install_from_url(installer_url, prefix=prefix, env=env, run_checks=run_checks, restart_kernel=restart_kernel, environment_file=environment_file)
 
 
 def install_miniconda(
-    prefix: os.PathLike = PREFIX, env: Dict[AnyStr, AnyStr] = None, run_checks: bool = True, restart_kernel: bool = True,
+    prefix: os.PathLike = PREFIX, env: Dict[AnyStr, AnyStr] = None, run_checks: bool = True, restart_kernel: bool = True, environment_file: str = None,
 ):
     """
     Install Miniconda 4.12.0 for Python 3.7.
@@ -329,11 +329,11 @@ def install_miniconda(
         to run the installation.
     """
     installer_url = r"https://repo.anaconda.com/miniconda/Miniconda3-py37_4.12.0-Linux-x86_64.sh"
-    install_from_url(installer_url, prefix=prefix, env=env, run_checks=run_checks, restart_kernel=restart_kernel)
+    install_from_url(installer_url, prefix=prefix, env=env, run_checks=run_checks, restart_kernel=restart_kernel, environment_file=environment_file)
 
 
 def install_anaconda(
-    prefix: os.PathLike = PREFIX, env: Dict[AnyStr, AnyStr] = None, run_checks: bool = True, restart_kernel: bool = True,
+    prefix: os.PathLike = PREFIX, env: Dict[AnyStr, AnyStr] = None, run_checks: bool = True, restart_kernel: bool = True, environment_file: str = None,
 ):
     """
     Install Anaconda 2022.05, the latest version built
@@ -359,7 +359,7 @@ def install_anaconda(
         to run the installation.
     """
     installer_url = r"https://repo.anaconda.com/archive/Anaconda3-2022.05-Linux-x86_64.sh"
-    install_from_url(installer_url, prefix=prefix, env=env, run_checks=run_checks, restart_kernel=restart_kernel)
+    install_from_url(installer_url, prefix=prefix, env=env, run_checks=run_checks, restart_kernel=restart_kernel, environment_file=environment_file)
 
 
 def check(prefix: os.PathLike = PREFIX, verbose: bool = True):
@@ -376,10 +376,6 @@ def check(prefix: os.PathLike = PREFIX, verbose: bool = True):
         Print success message if True
     """
     assert find_executable("conda"), "💥💔💥 Conda not found!"
-
-    pymaj, pymin = sys.version_info[:2]
-    sitepackages = f"{prefix}/lib/python{pymaj}.{pymin}/site-packages"
-    assert sitepackages in sys.path, f"💥💔💥 PYTHONPATH was not patched! Value: {sys.path}"
     assert all(
         not path.startswith("/usr/local/") for path in sys.path
     ), f"💥💔💥 PYTHONPATH include system locations: {[path for path in sys.path if path.startswith('/usr/local')]}!"
