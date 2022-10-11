@@ -79,9 +79,13 @@ def _run_subprocess(command, logs_filename):
             text=True,
         )
 
-    with open(f"/content/{logs_filename}", "w") as f:
+    logs_file_path = "/var/condacolab"
+    if not os.path.exists(logs_file_path):
+        os.mkdir(logs_file_path)
+
+    with open(f"{logs_file_path}/{logs_filename}", "w") as f:
         f.write(task.stdout)
-    assert (task.returncode == 0), f"💥💔💥 The installation failed! Logs are available at `/content/{logs_filename}`."
+    assert (task.returncode == 0), f"💥💔💥 The installation failed! Logs are available at `{logs_file_path}/{logs_filename}`."
 
 
 def install_from_url(
