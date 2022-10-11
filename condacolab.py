@@ -122,6 +122,10 @@ def install_from_url(
         Run checks to see if installation was run previously.
         Change to False to ignore checks and always attempt
         to run the installation.
+    restart_kernel
+        Variable to manage the kernel restart during the installation 
+        of condacolab. Set it `False` to stop the kernel from restarting 
+        automatically and get a button instead to do it.
     """
     if run_checks:
         try:  # run checks to see if it this was run already
