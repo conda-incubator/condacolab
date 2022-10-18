@@ -80,8 +80,7 @@ def _run_subprocess(command, logs_filename):
         )
 
     logs_file_path = "/var/condacolab"
-    if not os.path.exists(logs_file_path):
-        os.mkdir(logs_file_path)
+    os.makedirs(logs_file_path, exist_ok=True)
 
     with open(f"{logs_file_path}/{logs_filename}", "w") as f:
         f.write(task.stdout)
@@ -144,29 +143,12 @@ def install_from_url(
     prefix = Path(prefix)
     condameta = prefix / "conda-meta"
     condameta.mkdir(parents=True, exist_ok=True)
-    pymaj, pymin = sys.version_info[:2]
 
     with open(condameta / "pinned", "a") as f:
-        f.write(f"python {pymaj}.{pymin}.*\n")
-        f.write(f"python_abi {pymaj}.{pymin}.* *cp{pymaj}{pymin}*\n")
         f.write(f"cudatoolkit {cuda_version}.*\n")
 
     with open(prefix / ".condarc", "a") as f:
         f.write("always_yes: true\n")
-
-    with open("/etc/ipython/ipython_config.py", "a") as f:
-        f.write(
-            f"""\nc.InteractiveShellApp.exec_lines = [
-                    "import sys",
-                    "sp = f'{prefix}/lib/python{pymaj}.{pymin}/site-packages'",
-                    "if sp not in sys.path:",
-                    "    sys.path.insert(0, sp)",
-                ]
-            """
-        )
-    sitepackages = f"{prefix}/lib/python{pymaj}.{pymin}/site-packages"
-    if sitepackages not in sys.path:
-        sys.path.insert(0, sitepackages)
 
     print("📦 Installing...")
 
