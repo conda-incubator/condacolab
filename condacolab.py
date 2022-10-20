@@ -138,6 +138,11 @@ def install_from_url(
     with urlopen(installer_url) as response, open(installer_fn, "wb") as out:
         shutil.copyfileobj(response, out)
 
+    condacolab_task = _run_subprocess(
+        ["bash", installer_fn, "-bfp", str(prefix)],
+        "condacolab_install.log",
+        )
+
     print("📌 Adjusting configuration...")
     cuda_version = ".".join(os.environ.get("CUDA_VERSION", "*.*.*").split(".")[:2])
     prefix = Path(prefix)
@@ -151,11 +156,6 @@ def install_from_url(
         f.write("always_yes: true\n")
 
     print("📦 Installing...")
-
-    condacolab_task = _run_subprocess(
-        ["bash", installer_fn, "-bfp", str(prefix)],
-        "condacolab_install.log",
-        )
 
 # Installing the following packages because Colab server expects these packages to be installed in order to launch a Python kernel:
 #     - matplotlib-base
