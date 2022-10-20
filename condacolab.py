@@ -250,6 +250,10 @@ def install_mambaforge(
         Run checks to see if installation was run previously.
         Change to False to ignore checks and always attempt
         to run the installation.
+    restart_kernel
+        Variable to manage the kernel restart during the installation
+        of condacolab. Set it `False` to stop the kernel from restarting
+        automatically and get a button instead to do it.
     """
     installer_url = r"https://github.com/jaimergp/miniforge/releases/latest/download/Mambaforge-colab-Linux-x86_64.sh"
     install_from_url(installer_url, prefix=prefix, env=env, run_checks=run_checks, restart_kernel=restart_kernel)
@@ -288,6 +292,10 @@ def install_miniforge(
         Run checks to see if installation was run previously.
         Change to False to ignore checks and always attempt
         to run the installation.
+    restart_kernel
+        Variable to manage the kernel restart during the installation 
+        of condacolab. Set it `False` to stop the kernel from restarting 
+        automatically and get a button instead to do it.
     """
     installer_url = r"https://github.com/jaimergp/miniforge/releases/latest/download/Miniforge-colab-Linux-x86_64.sh"
     install_from_url(installer_url, prefix=prefix, env=env, run_checks=run_checks, restart_kernel=restart_kernel)
@@ -317,6 +325,10 @@ def install_miniconda(
         Run checks to see if installation was run previously.
         Change to False to ignore checks and always attempt
         to run the installation.
+    restart_kernel
+        Variable to manage the kernel restart during the installation 
+        of condacolab. Set it `False` to stop the kernel from restarting 
+        automatically and get a button instead to do it.
     """
     installer_url = r"https://repo.anaconda.com/miniconda/Miniconda3-py37_4.12.0-Linux-x86_64.sh"
     install_from_url(installer_url, prefix=prefix, env=env, run_checks=run_checks, restart_kernel=restart_kernel)
@@ -347,6 +359,10 @@ def install_anaconda(
         Run checks to see if installation was run previously.
         Change to False to ignore checks and always attempt
         to run the installation.
+    restart_kernel
+        Variable to manage the kernel restart during the installation 
+        of condacolab. Set it `False` to stop the kernel from restarting 
+        automatically and get a button instead to do it.
     """
     installer_url = r"https://repo.anaconda.com/archive/Anaconda3-2022.05-Linux-x86_64.sh"
     install_from_url(installer_url, prefix=prefix, env=env, run_checks=run_checks, restart_kernel=restart_kernel)
