@@ -115,6 +115,9 @@ def install_from_url(
         For example, a value with spaces should be passed as::
 
             env={"VAR": '"a value with spaces"'}
+    pre_kernel_launch_script
+        Path to a bash file or a string with bash script that you
+        want to run before activating conda base environment.
     run_checks
         Run checks to see if installation was run previously.
         Change to False to ignore checks and always attempt
@@ -267,6 +270,9 @@ def install_mambaforge(
         For example, a value with spaces should be passed as::
 
             env={"VAR": '"a value with spaces"'}
+    pre_kernel_launch_script
+        Path to a bash file or a string with bash script that you
+        want to run before activating conda base environment.
     run_checks
         Run checks to see if installation was run previously.
         Change to False to ignore checks and always attempt
@@ -305,6 +311,9 @@ def install_miniforge(
         For example, a value with spaces should be passed as::
 
             env={"VAR": '"a value with spaces"'}
+    pre_kernel_launch_script
+        Path to a bash file or a string with bash script that you
+        want to run before activating conda base environment.
     run_checks
         Run checks to see if installation was run previously.
         Change to False to ignore checks and always attempt
@@ -334,6 +343,9 @@ def install_miniconda(
         For example, a value with spaces should be passed as::
 
             env={"VAR": '"a value with spaces"'}
+    pre_kernel_launch_script
+        Path to a bash file or a string with bash script that you
+        want to run before activating conda base environment.
     run_checks
         Run checks to see if installation was run previously.
         Change to False to ignore checks and always attempt
@@ -364,6 +376,9 @@ def install_anaconda(
         For example, a value with spaces should be passed as::
 
             env={"VAR": '"a value with spaces"'}
+    pre_kernel_launch_script
+        Path to a bash file or a string with bash script that you
+        want to run before activating conda base environment.
     run_checks
         Run checks to see if installation was run previously.
         Change to False to ignore checks and always attempt
