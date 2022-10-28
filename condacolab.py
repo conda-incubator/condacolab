@@ -79,9 +79,12 @@ def _run_subprocess(command, logs_filename):
             text=True,
         )
 
-    with open(f"/content/{logs_filename}", "w") as f:
+    logs_file_path = "/var/condacolab"
+    os.makedirs(logs_file_path, exist_ok=True)
+
+    with open(f"{logs_file_path}/{logs_filename}", "w") as f:
         f.write(task.stdout)
-    assert (task.returncode == 0), f"💥💔💥 The installation failed! Logs are available at `/content/{logs_filename}`."
+    assert (task.returncode == 0), f"💥💔💥 The installation failed! Logs are available at `{logs_file_path}/{logs_filename}`."
 
 
 def install_from_url(
@@ -118,6 +121,10 @@ def install_from_url(
         Run checks to see if installation was run previously.
         Change to False to ignore checks and always attempt
         to run the installation.
+    restart_kernel
+        Variable to manage the kernel restart during the installation 
+        of condacolab. Set it `False` to stop the kernel from restarting 
+        automatically and get a button instead to do it.
     """
     if run_checks:
         try:  # run checks to see if it this was run already
@@ -131,12 +138,24 @@ def install_from_url(
     with urlopen(installer_url) as response, open(installer_fn, "wb") as out:
         shutil.copyfileobj(response, out)
 
-    print("📦 Installing...")
-
     condacolab_task = _run_subprocess(
         ["bash", installer_fn, "-bfp", str(prefix)],
         "condacolab_install.log",
         )
+
+    print("📌 Adjusting configuration...")
+    cuda_version = ".".join(os.environ.get("CUDA_VERSION", "*.*.*").split(".")[:2])
+    prefix = Path(prefix)
+    condameta = prefix / "conda-meta"
+    condameta.mkdir(parents=True, exist_ok=True)
+
+    with open(condameta / "pinned", "a") as f:
+        f.write(f"cudatoolkit {cuda_version}.*\n")
+
+    with open(prefix / ".condarc", "a") as f:
+        f.write("always_yes: true\n")
+
+    print("📦 Installing...")
 
 # Installing the following packages because Colab server expects these packages to be installed in order to launch a Python kernel:
 #     - matplotlib-base
@@ -166,35 +185,6 @@ def install_from_url(
         [f"{prefix}/bin/python", "-m", "pip", "-q", "install", "-U", "https://github.com/googlecolab/colabtools/archive/refs/heads/main.zip", "condacolab"],
         "pip_task.log"
         )
-
-    print("📌 Adjusting configuration...")
-    cuda_version = ".".join(os.environ.get("CUDA_VERSION", "*.*.*").split(".")[:2])
-    prefix = Path(prefix)
-    condameta = prefix / "conda-meta"
-    condameta.mkdir(parents=True, exist_ok=True)
-    pymaj, pymin = sys.version_info[:2]
-
-    with open(condameta / "pinned", "a") as f:
-        f.write(f"python {pymaj}.{pymin}.*\n")
-        f.write(f"python_abi {pymaj}.{pymin}.* *cp{pymaj}{pymin}*\n")
-        f.write(f"cudatoolkit {cuda_version}.*\n")
-
-    with open(prefix / ".condarc", "a") as f:
-        f.write("always_yes: true\n")
-
-    with open("/etc/ipython/ipython_config.py", "a") as f:
-        f.write(
-            f"""\nc.InteractiveShellApp.exec_lines = [
-                    "import sys",
-                    "sp = f'{prefix}/lib/python{pymaj}.{pymin}/site-packages'",
-                    "if sp not in sys.path:",
-                    "    sys.path.insert(0, sp)",
-                ]
-            """
-        )
-    sitepackages = f"{prefix}/lib/python{pymaj}.{pymin}/site-packages"
-    if sitepackages not in sys.path:
-        sys.path.insert(0, sitepackages)
 
     env = env or {}
     bin_path = f"{prefix}/bin"
@@ -260,6 +250,10 @@ def install_mambaforge(
         Run checks to see if installation was run previously.
         Change to False to ignore checks and always attempt
         to run the installation.
+    restart_kernel
+        Variable to manage the kernel restart during the installation
+        of condacolab. Set it `False` to stop the kernel from restarting
+        automatically and get a button instead to do it.
     """
     installer_url = r"https://github.com/jaimergp/miniforge/releases/latest/download/Mambaforge-colab-Linux-x86_64.sh"
     install_from_url(installer_url, prefix=prefix, env=env, run_checks=run_checks, restart_kernel=restart_kernel)
@@ -298,6 +292,10 @@ def install_miniforge(
         Run checks to see if installation was run previously.
         Change to False to ignore checks and always attempt
         to run the installation.
+    restart_kernel
+        Variable to manage the kernel restart during the installation 
+        of condacolab. Set it `False` to stop the kernel from restarting 
+        automatically and get a button instead to do it.
     """
     installer_url = r"https://github.com/jaimergp/miniforge/releases/latest/download/Miniforge-colab-Linux-x86_64.sh"
     install_from_url(installer_url, prefix=prefix, env=env, run_checks=run_checks, restart_kernel=restart_kernel)
@@ -327,6 +325,10 @@ def install_miniconda(
         Run checks to see if installation was run previously.
         Change to False to ignore checks and always attempt
         to run the installation.
+    restart_kernel
+        Variable to manage the kernel restart during the installation 
+        of condacolab. Set it `False` to stop the kernel from restarting 
+        automatically and get a button instead to do it.
     """
     installer_url = r"https://repo.anaconda.com/miniconda/Miniconda3-py37_4.12.0-Linux-x86_64.sh"
     install_from_url(installer_url, prefix=prefix, env=env, run_checks=run_checks, restart_kernel=restart_kernel)
@@ -357,6 +359,10 @@ def install_anaconda(
         Run checks to see if installation was run previously.
         Change to False to ignore checks and always attempt
         to run the installation.
+    restart_kernel
+        Variable to manage the kernel restart during the installation 
+        of condacolab. Set it `False` to stop the kernel from restarting 
+        automatically and get a button instead to do it.
     """
     installer_url = r"https://repo.anaconda.com/archive/Anaconda3-2022.05-Linux-x86_64.sh"
     install_from_url(installer_url, prefix=prefix, env=env, run_checks=run_checks, restart_kernel=restart_kernel)
