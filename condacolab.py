@@ -273,8 +273,8 @@ def install_mambaforge(
 
             env={"VAR": '"a value with spaces"'}
     pre_conda
-        Path to a bash file or a string with bash script that you
-        want to run before activating conda base environment.
+        Shell script to run before activating the conda base environment.
+        Accepts a file path or a string with the contents.
     run_checks
         Run checks to see if installation was run previously.
         Change to False to ignore checks and always attempt
@@ -314,8 +314,8 @@ def install_miniforge(
 
             env={"VAR": '"a value with spaces"'}
     pre_conda
-        Path to a bash file or a string with bash script that you
-        want to run before activating conda base environment.
+        Shell script to run before activating the conda base environment.
+        Accepts a file path or a string with the contents.
     run_checks
         Run checks to see if installation was run previously.
         Change to False to ignore checks and always attempt
@@ -346,8 +346,8 @@ def install_miniconda(
 
             env={"VAR": '"a value with spaces"'}
     pre_conda
-        Path to a bash file or a string with bash script that you
-        want to run before activating conda base environment.
+        Shell script to run before activating the conda base environment.
+        Accepts a file path or a string with the contents.
     run_checks
         Run checks to see if installation was run previously.
         Change to False to ignore checks and always attempt
@@ -379,8 +379,8 @@ def install_anaconda(
 
             env={"VAR": '"a value with spaces"'}
     pre_conda
-        Path to a bash file or a string with bash script that you
-        want to run before activating conda base environment.
+        Shell script to run before activating the conda base environment.
+        Accepts a file path or a string with the contents.
     run_checks
         Run checks to see if installation was run previously.
         Change to False to ignore checks and always attempt
