@@ -12,6 +12,7 @@ For more details, check the docstrings for ``install_from_url()``.
 
 import json
 import os
+import shlex
 import sys
 import shutil
 from datetime import datetime, timedelta
@@ -205,7 +206,7 @@ def install_from_url(
     pre_conda_contents = ""
 
     if env:
-        pre_conda_contents = "".join(f'export {key}={value}\n' for key, value in env.items())
+        pre_conda_contents = "".join(f'export {key}="{shlex.quote(value)}"\n' for key, value in env.items())
 
     if pre_conda:
         if os.path.isfile(pre_conda):
@@ -221,7 +222,7 @@ def install_from_url(
                 f"""
                 #!/bin/bash
                 {pre_conda_contents}
-                source {prefix}/etc/profile.d/conda.sh
+                source "{prefix}/etc/profile.d/conda.sh"
                 conda activate
                 unset PYTHONPATH
                 mv /usr/bin/lsb_release /usr/bin/lsb_release.renamed_by_condacolab.bak
