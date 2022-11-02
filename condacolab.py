@@ -15,15 +15,15 @@ import os
 import sys
 import shutil
 from datetime import datetime, timedelta
+from distutils.spawn import find_executable
 from pathlib import Path
 from subprocess import check_output, run, PIPE, STDOUT
 from textwrap import dedent
 from typing import Dict, AnyStr, Iterable
 from urllib.request import urlopen
 from urllib.error import HTTPError
-from distutils.spawn import find_executable
-from IPython.display import display
 
+from IPython.display import display
 from IPython import get_ipython
 
 try:
@@ -99,10 +99,10 @@ def _update_environment(
     prefix:os.PathLike = PREFIX,
     environment_file: str = None,
     python_version: str = None,
-    specs: Iterable[str] = None,
-    channels: Iterable[str] = None,
-    pip_args: Iterable[str] = None,
-    extra_conda_args: Iterable[str] = None,
+    specs: Iterable[str] = (),
+    channels: Iterable[str] = (),
+    pip_args: Iterable[str] = (),
+    extra_conda_args: Iterable[str] = (),
     ):
     """
     Install the dependencies in conda base environment during
@@ -127,6 +127,8 @@ def _update_environment(
     extra_conda_args
         Any extra conda arguments to be used during the installation.
     """
+    os.makedirs("/var/condacolab", exist_ok=True)
+    environment_file_path = "/var/condacolab/environment.yaml"
 
     # When environment.yaml file is not provided.
     if environment_file is None:
@@ -140,7 +142,6 @@ def _update_environment(
         if pip_args:
             pip_args_dict = {"pip": pip_args}
             env_details["dependencies"].append(pip_args_dict)
-        environment_file_path = "/environment.yaml"
 
         with open(environment_file_path, 'w') as f:
             yaml.indent(mapping=2, sequence=4, offset=2)
@@ -148,7 +149,6 @@ def _update_environment(
     else:
         # If URL is given for environment.yaml file
         if environment_file.startswith(("http://", "https://")):
-            environment_file_path = "/environment.yaml"
             try:
                 with urlopen(environment_file) as response, open(environment_file_path, "wb") as out:
                     shutil.copyfileobj(response, out)
@@ -157,7 +157,7 @@ def _update_environment(
 
         # If path is given for environment.yaml file
         else:
-            environment_file_path = environment_file
+            shutil.copy(environment_file, environment_file_path)
 
         with open(environment_file_path, 'r') as f:
             env_details = yaml.load(f.read())
@@ -173,18 +173,17 @@ def _update_environment(
                 if pip_args:
                     for element in env_details["dependencies"]:
                         # if pip dependencies are already specified.
-                        if type(element) is CommentedMap and "pip" in element:
+                        if isinstance(element, CommentedMap) and "pip" in element:
                             element["pip"].extend(pip_args)
+                            break
                         # if there are no pip dependencies specified in the yaml file.
-                        else:
-                            pip_args_dict = CommentedMap([("pip", [*pip_args])])
-                            env_details["dependencies"].append(pip_args_dict)
-                        break
+                    else:
+                        pip_args_dict = CommentedMap([("pip", [*pip_args])])
+                        env_details["dependencies"].append(pip_args_dict)
+
         with open(environment_file_path, 'w') as f:
             f.truncate(0)
             yaml.dump(env_details, f)
-
-    extra_conda_args = extra_conda_args or ()
 
     _run_subprocess(
         [f"{prefix}/bin/python", "-m", "conda_env", "update", "-n", "base", "-f", environment_file_path, *extra_conda_args],
@@ -200,10 +199,10 @@ def install_from_url(
     restart_kernel: bool = True,
     environment_file: str = None,
     python_version: str = None,
-    specs: Iterable[str] = None,
-    channels: Iterable[str] = None,
-    pip_args: Iterable[str] = None,
-    extra_conda_args: Iterable[str] = None,
+    specs: Iterable[str] = (),
+    channels: Iterable[str] = (),
+    pip_args: Iterable[str] = (),
+    extra_conda_args: Iterable[str] = (),
 ):
     """
     Download and run a constructor-like installer, patching
@@ -297,54 +296,35 @@ def install_from_url(
         "pip_task.log"
         )
 
-    print("📌 Adjusting configuration...")
-    cuda_version = ".".join(os.environ.get("CUDA_VERSION", "*.*.*").split(".")[:2])
-    prefix = Path(prefix)
-    condameta = prefix / "conda-meta"
-    condameta.mkdir(parents=True, exist_ok=True)
-
-
-    with open(condameta / "pinned", "a") as f:
-        f.write(f"cudatoolkit {cuda_version}.*\n")
-
-    with open(prefix / ".condarc", "a") as f:
-        f.write("always_yes: true\n")
-
-    if environment_file and not specs and not channels and not pip_args and not python_version:
-        extra_conda_args = extra_conda_args or ()
-        _run_subprocess(
-            [f"{prefix}/bin/python", "-m", "conda_env", "update", "-n", "base", "-f", environment_file],
-            "environment_file_update.log",
+    _update_environment(
+        prefix=prefix,
+        environment_file=environment_file,
+        specs=specs,
+        channels=channels,
+        python_version=python_version,
+        pip_args=pip_args,
+        extra_conda_args=extra_conda_args,
         )
-    else:
-        _update_environment(
-            prefix=prefix,
-            environment_file=environment_file,
-            specs=specs,
-            channels=channels,
-            python_version=python_version,
-            pip_args=pip_args,
-            extra_conda_args=extra_conda_args,
-            )
 
     env = env or {}
     bin_path = f"{prefix}/bin"
 
-    os.rename(sys.executable, f"{sys.executable}.renamed_by_condacolab.bak")
-    with open(sys.executable, "w") as f:
-        f.write(
-            dedent(
-                f"""
-                #!/bin/bash
-                source {prefix}/etc/profile.d/conda.sh
-                conda activate
-                unset PYTHONPATH
-                mv /usr/bin/lsb_release /usr/bin/lsb_release.renamed_by_condacolab.bak
-                exec {bin_path}/python $@
-                """
-            ).lstrip()
-        )
-    run(["chmod", "+x", sys.executable])
+    if os.path.exists(sys.executable):
+        os.rename(sys.executable, f"{sys.executable}.renamed_by_condacolab.bak")
+        with open(sys.executable, "w") as f:
+            f.write(
+                dedent(
+                    f"""
+                    #!/bin/bash
+                    source {prefix}/etc/profile.d/conda.sh
+                    conda activate
+                    unset PYTHONPATH
+                    mv /usr/bin/lsb_release /usr/bin/lsb_release.renamed_by_condacolab.bak
+                    exec {bin_path}/python $@
+                    """
+                ).lstrip()
+            )
+        run(["chmod", "+x", sys.executable])
 
     taken = timedelta(seconds=round((datetime.now() - t0).total_seconds(), 0))
     print(f"⏲ Done in {taken}")
@@ -367,12 +347,12 @@ def install_mambaforge(
     env: Dict[AnyStr, AnyStr] = None,
     run_checks: bool = True,
     restart_kernel: bool = True,
-    specs: Iterable[str] = None,
+    specs: Iterable[str] = (),
     python_version: str = None,
-    channels: Iterable[str] = None,
+    channels: Iterable[str] = (),
     environment_file: str = None,
-    extra_conda_args: Iterable[str] = None,
-    pip_args: Iterable[str] = None,
+    extra_conda_args: Iterable[str] = (),
+    pip_args: Iterable[str] = (),
 
 ):
     """
@@ -427,12 +407,12 @@ def install_miniforge(
     env: Dict[AnyStr, AnyStr] = None,
     run_checks: bool = True,
     restart_kernel: bool = True,
-    specs: Iterable[str] = None,
+    specs: Iterable[str] = (),
     python_version: str = None,
-    channels: Iterable[str] = None,
+    channels: Iterable[str] = (),
     environment_file: str = None,
-    extra_conda_args: Iterable[str] = None,
-    pip_args: Iterable[str] = None,
+    extra_conda_args: Iterable[str] = (),
+    pip_args: Iterable[str] = (),
 ):
     """
     Install Mambaforge, built for Python 3.7.
@@ -486,12 +466,12 @@ def install_miniconda(
     env: Dict[AnyStr, AnyStr] = None,
     run_checks: bool = True,
     restart_kernel: bool = True,
-    specs: Iterable[str] = None,
+    specs: Iterable[str] = (),
     python_version: str = None,
-    channels: Iterable[str] = None,
+    channels: Iterable[str] = (),
     environment_file: str = None,
-    extra_conda_args: Iterable[str] = None,
-    pip_args: Iterable[str] = None,
+    extra_conda_args: Iterable[str] = (),
+    pip_args: Iterable[str] = (),
 ):
     """
     Install Miniconda 4.12.0 for Python 3.7.
@@ -540,12 +520,12 @@ def install_anaconda(
     env: Dict[AnyStr, AnyStr] = None,
     run_checks: bool = True,
     restart_kernel: bool = True,
-    specs: Iterable[str] = None,
+    specs: Iterable[str] = (),
     python_version: str = None,
-    channels: Iterable[str] = None,
+    channels: Iterable[str] = (),
     environment_file: str = None,
-    extra_conda_args: Iterable[str] = None,
-    pip_args: Iterable[str] = None,
+    extra_conda_args: Iterable[str] = (),
+    pip_args: Iterable[str] = (),
 ):
     """
     Install Anaconda 2022.05, the latest version built
