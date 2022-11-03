@@ -206,7 +206,7 @@ def install_from_url(
     pre_conda_contents = ""
 
     if env:
-        pre_conda_contents = "".join(f'export {key}="{shlex.quote(value)}"\n' for key, value in env.items())
+        pre_conda_contents = "".join([f'export {key}="{shlex.quote(value)}"\n' for key, value in env.items()])
 
     if pre_conda:
         if os.path.isfile(pre_conda):
