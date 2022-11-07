@@ -103,6 +103,7 @@ def _update_environment(
     channels: Iterable[str] = (),
     pip_args: Iterable[str] = (),
     extra_conda_args: Iterable[str] = (),
+    conda_exe: str = "conda",
     ):
     """
     Install the dependencies in conda base environment during
@@ -186,7 +187,7 @@ def _update_environment(
             yaml.dump(env_details, f)
 
     _run_subprocess(
-        [f"{prefix}/bin/python", "-m", "conda_env", "update", "-n", "base", "-f", environment_file_path, *extra_conda_args],
+        [conda_exe, "env", "update", "-n", "base", "-f", environment_file_path, *extra_conda_args],
         "environment_file_update.log",
     )
 
@@ -304,6 +305,7 @@ def install_from_url(
         python_version=python_version,
         pip_args=pip_args,
         extra_conda_args=extra_conda_args,
+        conda_exe=f"{prefix}/bin/{conda_exe}",
         )
 
     env = env or {}
