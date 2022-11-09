@@ -297,6 +297,8 @@ def install_from_url(
         "pip_task.log"
         )
 
+    print("📦 Updating enviornment using YAML file...")
+
     _update_environment(
         prefix=prefix,
         environment_file=environment_file,
