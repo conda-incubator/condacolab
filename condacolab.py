@@ -21,15 +21,11 @@ from textwrap import dedent
 from typing import Dict, AnyStr
 from urllib.request import urlopen
 from distutils.spawn import find_executable
-from IPython.display import display
 
+import ipywidgets as widgets
+from IPython.display import display
 from IPython import get_ipython
 
-try:
-    import ipywidgets as widgets
-    HAS_IPYWIDGETS = True
-except ImportError:
-    HAS_IPYWIDGETS = False
 
 try:
     import google.colab
@@ -46,17 +42,16 @@ __author__ = (
 
 PREFIX = "/opt/conda"
 
-if HAS_IPYWIDGETS:
-    restart_kernel_button = widgets.Button(description="Restart kernel now...")
-    restart_button_output = widgets.Output(layout={'border': '1px solid black'})
-else:
-    restart_kernel_button = restart_button_output = None
+
+restart_kernel_button = widgets.Button(description="Restart kernel now...")
+restart_button_output = widgets.Output(layout={'border': '1px solid black'})
+
 
 def _on_button_clicked(b):
-  with restart_button_output:
-    get_ipython().kernel.do_shutdown(True)
-    print("Kernel restarted!")
-    restart_kernel_button.close()
+    with restart_button_output:
+        get_ipython().kernel.do_shutdown(True)
+        print("Kernel restarted!")
+        restart_kernel_button.close()
 
 def _run_subprocess(command, logs_filename):
     """
@@ -212,13 +207,10 @@ def install_from_url(
         print("🔁 Restarting kernel...")
         get_ipython().kernel.do_shutdown(True)
 
-    elif HAS_IPYWIDGETS:
+    else:
         print("🔁 Please restart kernel...")
         restart_kernel_button.on_click(_on_button_clicked)
         display(restart_kernel_button, restart_button_output)
-
-    else:
-        print("🔁 Please restart kernel by clicking on Runtime > Restart runtime.")
 
 def install_mambaforge(
     prefix: os.PathLike = PREFIX, env: Dict[AnyStr, AnyStr] = None, run_checks: bool = True, restart_kernel: bool = True,
