@@ -28,7 +28,7 @@ except ImportError:
     raise RuntimeError("This module must ONLY run as part of a Colab notebook!")
 
 
-__version__ = "0.1.5"
+__version__ = "0.1.6a"
 __author__ = "Jaime Rodríguez-Guerra <jaimergp@users.noreply.github.com>"
 
 
@@ -150,7 +150,7 @@ def install_mambaforge(
     prefix: os.PathLike = PREFIX, env: Dict[AnyStr, AnyStr] = None, run_checks: bool = True
 ):
     """
-    Install Mambaforge, built for Python 3.8.
+    Install Mambaforge, built for Python 3.9.
 
     Mambaforge consists of a Miniconda-like distribution optimized
     and preconfigured for conda-forge packages, and includes ``mamba``,
@@ -189,7 +189,7 @@ def install_miniforge(
     prefix: os.PathLike = PREFIX, env: Dict[AnyStr, AnyStr] = None, run_checks: bool = True
 ):
     """
-    Install Miniforge, built for Python 3.8.
+    Install Miniforge, built for Python 3.9.
 
     Miniforge consists of a Miniconda-like distribution optimized
     and preconfigured for conda-forge packages.
@@ -223,7 +223,7 @@ def install_miniconda(
     prefix: os.PathLike = PREFIX, env: Dict[AnyStr, AnyStr] = None, run_checks: bool = True
 ):
     """
-    Install Miniconda 4.12.0 for Python 3.8.
+    Install Miniconda 23.1.0 for Python 3.9.
 
     Parameters
     ----------
@@ -244,7 +244,7 @@ def install_miniconda(
         Change to False to ignore checks and always attempt
         to run the installation.
     """
-    installer_url = r"https://repo.anaconda.com/miniconda/Miniconda3-py38_4.12.0-Linux-x86_64.sh"
+    installer_url = r"https://repo.anaconda.com/miniconda/Miniconda3-py39_23.1.0-1-Linux-x86_64.sh"
     install_from_url(installer_url, prefix=prefix, env=env, run_checks=run_checks)
 
 
@@ -252,8 +252,8 @@ def install_anaconda(
     prefix: os.PathLike = PREFIX, env: Dict[AnyStr, AnyStr] = None, run_checks: bool = True
 ):
     """
-    Install Anaconda 2022.05, the latest version built
-    for Python 3.8 at the time of update.
+    Install Anaconda 2022.10, the latest version built
+    for Python 3.9 at the time of update.
 
     Parameters
     ----------
@@ -274,10 +274,8 @@ def install_anaconda(
         Change to False to ignore checks and always attempt
         to run the installation.
     """
-    raise RuntimeError(
-        "Anaconda Distribution does not provide installers for Python 3.8. "
-        "Try `install_miniconda()` as a workaround."
-    )
+    installer_url = r"https://repo.anaconda.com/archive/Anaconda3-2022.10-Linux-x86_64.sh"
+    install_from_url(installer_url, prefix=prefix, env=env, run_checks=run_checks)
 
 
 def check(prefix: os.PathLike = PREFIX, verbose: bool = True):
