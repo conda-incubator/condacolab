@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "condacolab"
-version = "0.1.5"
+version = "0.1.6"
 description = "Install Conda and friends on Google Colab, easily"
 readme = "README.md"
 authors = ["Jaime Rodríguez-Guerra <jaimergp@users.noreply.github.com>"]
