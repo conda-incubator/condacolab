@@ -10,6 +10,7 @@ Usage:
 For more details, check the docstrings for ``install_from_url()``.
 """
 
+import hashlib
 import os
 import sys
 import shutil
@@ -28,11 +29,19 @@ except ImportError:
     raise RuntimeError("This module must ONLY run as part of a Colab notebook!")
 
 
-__version__ = "0.1.6"
+__version__ = "0.1.7"
 __author__ = "Jaime Rodríguez-Guerra <jaimergp@users.noreply.github.com>"
 
 
 PREFIX = "/usr/local"
+
+
+def _chunked_sha256(path, chunksize=1_048_576):
+    hasher = hashlib.sha256()
+    with open(path, "rb") as f:
+        while (chunk := f.read(chunksize)):
+            hasher.update(chunk)
+    return hasher.hexdigest()
 
 
 def install_from_url(
@@ -40,6 +49,7 @@ def install_from_url(
     prefix: os.PathLike = PREFIX,
     env: Dict[AnyStr, AnyStr] = None,
     run_checks: bool = True,
+    sha256: AnyStr = None,
 ):
     """
     Download and run a constructor-like installer, patching
@@ -68,6 +78,8 @@ def install_from_url(
         Run checks to see if installation was run previously.
         Change to False to ignore checks and always attempt
         to run the installation.
+    sha256
+        Expected SHA256 checksum of the installer. Optional.
     """
     if run_checks:
         try:  # run checks to see if it this was run already
@@ -80,6 +92,10 @@ def install_from_url(
     installer_fn = "__installer__.sh"
     with urlopen(installer_url) as response, open(installer_fn, "wb") as out:
         shutil.copyfileobj(response, out)
+
+    if sha256 is not None:
+        digest = _chunked_sha256(installer_fn)
+        assert digest == sha256, f"💥💔💥 Checksum failed! Expected {sha256}, got {digest}"
 
     print("📦 Installing...")
     task = run(
@@ -150,13 +166,11 @@ def install_mambaforge(
     prefix: os.PathLike = PREFIX, env: Dict[AnyStr, AnyStr] = None, run_checks: bool = True
 ):
     """
-    Install Mambaforge, built for Python 3.9.
+    Install Mambaforge, built for Python 3.10.
 
     Mambaforge consists of a Miniconda-like distribution optimized
     and preconfigured for conda-forge packages, and includes ``mamba``,
     a faster ``conda`` implementation.
-
-    Unlike the official Miniconda, this is built with the latest ``conda``.
 
     Parameters
     ----------
@@ -177,8 +191,9 @@ def install_mambaforge(
         Change to False to ignore checks and always attempt
         to run the installation.
     """
-    installer_url = r"https://github.com/jaimergp/miniforge/releases/latest/download/Mambaforge-colab-Linux-x86_64.sh"
-    install_from_url(installer_url, prefix=prefix, env=env, run_checks=run_checks)
+    installer_url = "https://github.com/conda-forge/miniforge/releases/download/23.1.0-1/Mambaforge-23.1.0-1-Linux-x86_64.sh"
+    checksum = "cfb16c47dc2d115c8b114280aa605e322173f029fdb847a45348bf4bd23c62ab"
+    install_from_url(installer_url, prefix=prefix, env=env, run_checks=run_checks, sha256=checksum)
 
 
 # Make mambaforge the default
@@ -189,12 +204,10 @@ def install_miniforge(
     prefix: os.PathLike = PREFIX, env: Dict[AnyStr, AnyStr] = None, run_checks: bool = True
 ):
     """
-    Install Miniforge, built for Python 3.9.
+    Install Miniforge, built for Python 3.10.
 
     Miniforge consists of a Miniconda-like distribution optimized
     and preconfigured for conda-forge packages.
-
-    Unlike the official Miniconda, this is built with the latest ``conda``.
 
     Parameters
     ----------
@@ -215,15 +228,16 @@ def install_miniforge(
         Change to False to ignore checks and always attempt
         to run the installation.
     """
-    installer_url = r"https://github.com/jaimergp/miniforge/releases/latest/download/Miniforge-colab-Linux-x86_64.sh"
-    install_from_url(installer_url, prefix=prefix, env=env, run_checks=run_checks)
+    installer_url = "https://github.com/conda-forge/miniforge/releases/download/23.1.0-1/Miniforge3-23.1.0-1-Linux-x86_64.sh"
+    checksum = "7a5859e873ed36fc9a141fff0ac60e133b971b3413aed49a4c82693d4f4a2ad2"
+    install_from_url(installer_url, prefix=prefix, env=env, run_checks=run_checks, sha256=checksum)
 
 
 def install_miniconda(
     prefix: os.PathLike = PREFIX, env: Dict[AnyStr, AnyStr] = None, run_checks: bool = True
 ):
     """
-    Install Miniconda 23.1.0 for Python 3.9.
+    Install Miniconda 23.1.0 for Python 3.10.
 
     Parameters
     ----------
@@ -244,16 +258,17 @@ def install_miniconda(
         Change to False to ignore checks and always attempt
         to run the installation.
     """
-    installer_url = r"https://repo.anaconda.com/miniconda/Miniconda3-py39_23.1.0-1-Linux-x86_64.sh"
-    install_from_url(installer_url, prefix=prefix, env=env, run_checks=run_checks)
+    installer_url = "https://repo.anaconda.com/miniconda/Miniconda3-py310_23.3.1-0-Linux-x86_64.sh"
+    checksum = "aef279d6baea7f67940f16aad17ebe5f6aac97487c7c03466ff01f4819e5a651"
+    install_from_url(installer_url, prefix=prefix, env=env, run_checks=run_checks, sha256=checksum)
 
 
 def install_anaconda(
     prefix: os.PathLike = PREFIX, env: Dict[AnyStr, AnyStr] = None, run_checks: bool = True
 ):
     """
-    Install Anaconda 2022.10, the latest version built
-    for Python 3.9 at the time of update.
+    Install Anaconda 2023.03, the latest version built
+    for Python 3.10 at the time of update.
 
     Parameters
     ----------
@@ -274,8 +289,9 @@ def install_anaconda(
         Change to False to ignore checks and always attempt
         to run the installation.
     """
-    installer_url = r"https://repo.anaconda.com/archive/Anaconda3-2022.10-Linux-x86_64.sh"
-    install_from_url(installer_url, prefix=prefix, env=env, run_checks=run_checks)
+    installer_url = "https://repo.anaconda.com/archive/Anaconda3-2023.03-1-Linux-x86_64.sh"
+    checksum = "95102d7c732411f1458a20bdf47e4c1b0b6c8a21a2edfe4052ca370aaae57bab"
+    install_from_url(installer_url, prefix=prefix, env=env, run_checks=run_checks, sha256=checksum)
 
 
 def check(prefix: os.PathLike = PREFIX, verbose: bool = True):
