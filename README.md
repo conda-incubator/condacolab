@@ -31,11 +31,11 @@ condacolab.check()
 
 The default `condacolab.install()` provides Mambaforge, but there are other `conda` distributions to choose from:
 
-- `install_miniconda()`: This will install the Miniconda distribution, using a version built for Python 3.9. Unlike Anaconda, this distribution only contains `python` and `conda`.
-- `install_miniforge()`: Like Miniconda, but built off `conda-forge` packages. The Miniforge distribution is officially provided by [conda-forge](https://github.com/conda-forge/miniforge) but we [forked and patched it](https://github.com/jaimergp/miniforge) so it's built for Python 3.9.
-- `install_mambaforge()`: Like Miniforge, but with `mamba` included. The Mambaforge distribution is officially provided by [conda-forge](https://github.com/conda-forge/miniforge) but we [forked and patched it](https://github.com/jaimergp/miniforge) so it's built for Python 3.9.
+- `install_miniconda()`: This will install the Miniconda distribution, using a version built for Python 3.10. Unlike Anaconda, this distribution only contains `python` and `conda`.
+- `install_miniforge()`: Like Miniconda, but built off `conda-forge` packages. The Miniforge distribution is officially provided by [conda-forge](https://github.com/conda-forge/miniforge).
+- `install_mambaforge()`: Like Miniforge, but with `mamba` included. The Mambaforge distribution is officially provided by [conda-forge](https://github.com/conda-forge/miniforge).
 
-For advanced users, `install_from_url()` is also available. It expects a URL pointing to a [`constructor`-like installer](https://github.com/conda/constructor), so you can prebuild a Python 3.9 distribution that fulfills your own needs.
+For advanced users, `install_from_url()` is also available. It expects a URL pointing to a [`constructor`-like installer](https://github.com/conda/constructor), so you can prebuild a Python 3.10 distribution that fulfills your own needs.
 
 > If you want to build your own `constructor`-based installer, check the FAQ below!
 
@@ -61,13 +61,13 @@ If you have a environment file (e.g. `environment.yml`), you can use it like thi
 ## Shortcomings
 
 - The Python kernel needs to be restarted for changes to be applied. This happens automatically. If you are wondering why you are seeing a message saying _"Your session crashed for an unknown reason"_, this is why. You can safely ignore this message!
-- You can only use the `base` environment, so do not try to create more environments with `conda create`.
+- You can only use the `base` environment, so do not try to create more environments with `conda create`. If you have an environment file, use `conda env update -n base -f <your-file.yml>`.
 
 ## FAQ
 
 ### How does it work?
 
-Google Colab runs on Python 3.9. We install the Miniconda distribution on top of the existing one at `/usr/local`, add a few configuration files so we stay with Python 3.9 and the newly installed packages are available. Finally, we wrap the Python executable to redirect and inject some environment variables needed to load the new libraries. Since we need to re-read `LD_LIBRARY_PATH`, a kernel restart is needed.
+Google Colab runs on Python 3.10. We install the Miniconda distribution on top of the existing one at `/usr/local`, add a few configuration files so we stay with Python 3.10 and the newly installed packages are available. Finally, we wrap the Python executable to redirect and inject some environment variables needed to load the new libraries. Since we need to re-read `LD_LIBRARY_PATH`, a kernel restart is needed.
 
 ### How can I cache my installation? I don't want to wait every time I start Colab.
 
