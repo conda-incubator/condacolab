@@ -29,7 +29,7 @@ except ImportError:
     raise RuntimeError("This module must ONLY run as part of a Colab notebook!")
 
 
-__version__ = "0.1.7a0"
+__version__ = "0.1.7"
 __author__ = "Jaime Rodríguez-Guerra <jaimergp@users.noreply.github.com>"
 
 
