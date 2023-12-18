@@ -120,14 +120,14 @@ def install_from_url(
     pymaj, pymin = sys.version_info[:2]
 
     if cuda_version.startswith("12"):
-        cudatoolkit = "cuda-version"
+        cudatoolkit = "cuda-version 12.*"
     else:
-        cudatoolkit = "cudatoolkit"
+        cudatoolkit = f"cudatoolkit {cuda_version}.*"
     
     with open(condameta / "pinned", "a") as f:
         f.write(f"python {pymaj}.{pymin}.*\n")
         f.write(f"python_abi {pymaj}.{pymin}.* *cp{pymaj}{pymin}*\n")
-        f.write(f"{cudatoolkit} {cuda_version}.*\n")
+        f.write(f"{cudatoolkit}\n")
 
     with open(prefix / ".condarc", "a") as f:
         f.write("always_yes: true\n")
