@@ -29,7 +29,7 @@ except ImportError:
     raise RuntimeError("This module must ONLY run as part of a Colab notebook!")
 
 
-__version__ = "0.1.7"
+__version__ = "0.1.8"
 __author__ = "Jaime Rodríguez-Guerra <jaimergp@users.noreply.github.com>"
 
 
@@ -119,10 +119,15 @@ def install_from_url(
     condameta.mkdir(parents=True, exist_ok=True)
     pymaj, pymin = sys.version_info[:2]
 
+    if cuda_version.startswith("12"):
+        cudatoolkit = "cuda-version 12.*"
+    else:
+        cudatoolkit = f"cudatoolkit {cuda_version}.*"
+    
     with open(condameta / "pinned", "a") as f:
         f.write(f"python {pymaj}.{pymin}.*\n")
         f.write(f"python_abi {pymaj}.{pymin}.* *cp{pymaj}{pymin}*\n")
-        f.write(f"cudatoolkit {cuda_version}.*\n")
+        f.write(f"{cudatoolkit}\n")
 
     with open(prefix / ".condarc", "a") as f:
         f.write("always_yes: true\n")
