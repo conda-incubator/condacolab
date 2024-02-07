@@ -123,7 +123,7 @@ def install_from_url(
         cudatoolkit = "cuda-version 12.*"
     else:
         cudatoolkit = f"cudatoolkit {cuda_version}.*"
-    
+
     with open(condameta / "pinned", "a") as f:
         f.write(f"python {pymaj}.{pymin}.*\n")
         f.write(f"python_abi {pymaj}.{pymin}.* *cp{pymaj}{pymin}*\n")
@@ -196,8 +196,8 @@ def install_mambaforge(
         Change to False to ignore checks and always attempt
         to run the installation.
     """
-    installer_url = "https://github.com/conda-forge/miniforge/releases/download/23.1.0-1/Mambaforge-23.1.0-1-Linux-x86_64.sh"
-    checksum = "cfb16c47dc2d115c8b114280aa605e322173f029fdb847a45348bf4bd23c62ab"
+    installer_url = "https://github.com/conda-forge/miniforge/releases/download/23.11.0-0/Mambaforge-23.11.0-0-Linux-x86_64.sh"
+    checksum = "3dfdcc162bf0df83b5025608dc2acdbbc575bd416b75701fb5863343c0517a78"
     install_from_url(installer_url, prefix=prefix, env=env, run_checks=run_checks, sha256=checksum)
 
 
@@ -233,8 +233,8 @@ def install_miniforge(
         Change to False to ignore checks and always attempt
         to run the installation.
     """
-    installer_url = "https://github.com/conda-forge/miniforge/releases/download/23.1.0-1/Miniforge3-23.1.0-1-Linux-x86_64.sh"
-    checksum = "7a5859e873ed36fc9a141fff0ac60e133b971b3413aed49a4c82693d4f4a2ad2"
+    installer_url = "https://github.com/conda-forge/miniforge/releases/download/23.11.0-0/Miniforge3-23.11.0-0-Linux-x86_64.sh"
+    checksum = "73576b96409ed38a7ca596bece058e8c77c6ef3eab42af7cfdf2ae975e8f3928"
     install_from_url(installer_url, prefix=prefix, env=env, run_checks=run_checks, sha256=checksum)
 
 
@@ -263,8 +263,8 @@ def install_miniconda(
         Change to False to ignore checks and always attempt
         to run the installation.
     """
-    installer_url = "https://repo.anaconda.com/miniconda/Miniconda3-py310_23.3.1-0-Linux-x86_64.sh"
-    checksum = "aef279d6baea7f67940f16aad17ebe5f6aac97487c7c03466ff01f4819e5a651"
+    installer_url = "https://repo.anaconda.com/miniconda/Miniconda3-py310_23.11.0-2-Linux-x86_64.sh"
+    checksum = "35a58b8961e1187e7311b979968662c6223e86e1451191bed2e67a72b6bd0658"
     install_from_url(installer_url, prefix=prefix, env=env, run_checks=run_checks, sha256=checksum)
 
 
@@ -272,7 +272,7 @@ def install_anaconda(
     prefix: os.PathLike = PREFIX, env: Dict[AnyStr, AnyStr] = None, run_checks: bool = True
 ):
     """
-    Install Anaconda 2023.03, the latest version built
+    Install Anaconda 2023.09, the latest version built
     for Python 3.10 at the time of update.
 
     Parameters
@@ -294,8 +294,8 @@ def install_anaconda(
         Change to False to ignore checks and always attempt
         to run the installation.
     """
-    installer_url = "https://repo.anaconda.com/archive/Anaconda3-2023.03-1-Linux-x86_64.sh"
-    checksum = "95102d7c732411f1458a20bdf47e4c1b0b6c8a21a2edfe4052ca370aaae57bab"
+    installer_url = "https://repo.anaconda.com/archive/Anaconda3-2023.09-0-Linux-x86_64.sh"
+    checksum = "6c8a4abb36fbb711dc055b7049a23bbfd61d356de9468b41c5140f8a11abd851"
     install_from_url(installer_url, prefix=prefix, env=env, run_checks=run_checks, sha256=checksum)
 
 
