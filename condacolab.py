@@ -171,7 +171,7 @@ def install_mambaforge(
     prefix: os.PathLike = PREFIX, env: Dict[AnyStr, AnyStr] = None, run_checks: bool = True
 ):
     """
-    Install Mambaforge, built for Python 3.10.
+    Install Mambaforge 23.11.0, built for Python 3.10.
 
     Mambaforge consists of a Miniconda-like distribution optimized
     and preconfigured for conda-forge packages, and includes ``mamba``,
@@ -209,7 +209,7 @@ def install_miniforge(
     prefix: os.PathLike = PREFIX, env: Dict[AnyStr, AnyStr] = None, run_checks: bool = True
 ):
     """
-    Install Miniforge, built for Python 3.10.
+    Install Miniforge 23.11.0, built for Python 3.10.
 
     Miniforge consists of a Miniconda-like distribution optimized
     and preconfigured for conda-forge packages.
@@ -242,7 +242,7 @@ def install_miniconda(
     prefix: os.PathLike = PREFIX, env: Dict[AnyStr, AnyStr] = None, run_checks: bool = True
 ):
     """
-    Install Miniconda 23.1.0 for Python 3.10.
+    Install Miniconda 23.11.0 for Python 3.10.
 
     Parameters
     ----------
@@ -272,7 +272,7 @@ def install_anaconda(
     prefix: os.PathLike = PREFIX, env: Dict[AnyStr, AnyStr] = None, run_checks: bool = True
 ):
     """
-    Install Anaconda 2023.09, the latest version built
+    Install Anaconda 2023.03, the latest version built
     for Python 3.10 at the time of update.
 
     Parameters
@@ -294,8 +294,8 @@ def install_anaconda(
         Change to False to ignore checks and always attempt
         to run the installation.
     """
-    installer_url = "https://repo.anaconda.com/archive/Anaconda3-2023.09-0-Linux-x86_64.sh"
-    checksum = "6c8a4abb36fbb711dc055b7049a23bbfd61d356de9468b41c5140f8a11abd851"
+    installer_url = "https://repo.anaconda.com/archive/Anaconda3-2023.03-1-Linux-x86_64.sh"
+    checksum = "95102d7c732411f1458a20bdf47e4c1b0b6c8a21a2edfe4052ca370aaae57bab"
     install_from_url(installer_url, prefix=prefix, env=env, run_checks=run_checks, sha256=checksum)
 
 
