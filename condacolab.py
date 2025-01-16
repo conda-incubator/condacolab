@@ -29,7 +29,7 @@ except ImportError:
     raise RuntimeError("This module must ONLY run as part of a Colab notebook!")
 
 
-__version__ = "0.1.9"
+__version__ = "0.1.10"
 __author__ = "Jaime Rodríguez-Guerra <jaimergp@users.noreply.github.com>"
 
 
@@ -39,7 +39,7 @@ PREFIX = "/usr/local"
 def _chunked_sha256(path, chunksize=1_048_576):
     hasher = hashlib.sha256()
     with open(path, "rb") as f:
-        while (chunk := f.read(chunksize)):
+        while chunk := f.read(chunksize):
             hasher.update(chunk)
     return hasher.hexdigest()
 
@@ -95,7 +95,9 @@ def install_from_url(
 
     if sha256 is not None:
         digest = _chunked_sha256(installer_fn)
-        assert digest == sha256, f"💥💔💥 Checksum failed! Expected {sha256}, got {digest}"
+        assert (
+            digest == sha256
+        ), f"💥💔💥 Checksum failed! Expected {sha256}, got {digest}"
 
     print("📦 Installing...")
     task = run(
@@ -167,49 +169,13 @@ def install_from_url(
     get_ipython().kernel.do_shutdown(True)
 
 
-def install_mambaforge(
-    prefix: os.PathLike = PREFIX, env: Dict[AnyStr, AnyStr] = None, run_checks: bool = True
-):
-    """
-    Install Mambaforge 23.11.0, built for Python 3.10.
-
-    Mambaforge consists of a Miniconda-like distribution optimized
-    and preconfigured for conda-forge packages, and includes ``mamba``,
-    a faster ``conda`` implementation.
-
-    Parameters
-    ----------
-    prefix
-        Target location for the installation
-    env
-        Environment variables to inject in the kernel restart.
-        We *need* to inject ``LD_LIBRARY_PATH`` so ``{PREFIX}/lib``
-        is first, but you can also add more if you need it. Take
-        into account that no quote handling is done, so you need
-        to add those yourself in the raw string. They will
-        end up added to a line like ``exec env VAR=VALUE python3...``.
-        For example, a value with spaces should be passed as::
-
-            env={"VAR": '"a value with spaces"'}
-    run_checks
-        Run checks to see if installation was run previously.
-        Change to False to ignore checks and always attempt
-        to run the installation.
-    """
-    installer_url = "https://github.com/conda-forge/miniforge/releases/download/23.11.0-0/Mambaforge-23.11.0-0-Linux-x86_64.sh"
-    checksum = "3dfdcc162bf0df83b5025608dc2acdbbc575bd416b75701fb5863343c0517a78"
-    install_from_url(installer_url, prefix=prefix, env=env, run_checks=run_checks, sha256=checksum)
-
-
-# Make mambaforge the default
-install = install_mambaforge
-
-
 def install_miniforge(
-    prefix: os.PathLike = PREFIX, env: Dict[AnyStr, AnyStr] = None, run_checks: bool = True
+    prefix: os.PathLike = PREFIX,
+    env: Dict[AnyStr, AnyStr] = None,
+    run_checks: bool = True,
 ):
     """
-    Install Miniforge 23.11.0, built for Python 3.10.
+    Install Miniforge 24.11.1, built for Python 3.11.
 
     Miniforge consists of a Miniconda-like distribution optimized
     and preconfigured for conda-forge packages.
@@ -233,16 +199,35 @@ def install_miniforge(
         Change to False to ignore checks and always attempt
         to run the installation.
     """
-    installer_url = "https://github.com/conda-forge/miniforge/releases/download/23.11.0-0/Miniforge3-23.11.0-0-Linux-x86_64.sh"
-    checksum = "73576b96409ed38a7ca596bece058e8c77c6ef3eab42af7cfdf2ae975e8f3928"
-    install_from_url(installer_url, prefix=prefix, env=env, run_checks=run_checks, sha256=checksum)
+    installer_url = (
+        "https://github.com/jaimergp/miniforge/releases/download/"
+        "24.11.2-1_colab/Miniforge3-colab-24.11.2-1_colab-Linux-x86_64.sh"
+    )
+    checksum = "359f81e4bc706c3e237105cc42cb5d5deaee0c89b4391cb70c5cb2c27d4e3677"
+    install_from_url(
+        installer_url, prefix=prefix, env=env, run_checks=run_checks, sha256=checksum
+    )
+
+
+# Make mambaforge the default
+install = install_miniforge
+
+
+def install_mambaforge(*args, **kwargs):
+    print(
+        "Mambaforge has been sunset. It is now identical to Miniforge. Installing Miniforge...",
+        file=sys.stderr,
+    )
+    install_miniforge(*args, **kwargs)
 
 
 def install_miniconda(
-    prefix: os.PathLike = PREFIX, env: Dict[AnyStr, AnyStr] = None, run_checks: bool = True
+    prefix: os.PathLike = PREFIX,
+    env: Dict[AnyStr, AnyStr] = None,
+    run_checks: bool = True,
 ):
     """
-    Install Miniconda 23.11.0 for Python 3.10.
+    Install Miniconda 24.11.1 for Python 3.11.
 
     Parameters
     ----------
@@ -263,17 +248,28 @@ def install_miniconda(
         Change to False to ignore checks and always attempt
         to run the installation.
     """
-    installer_url = "https://repo.anaconda.com/miniconda/Miniconda3-py310_23.11.0-2-Linux-x86_64.sh"
+    installer_url = (
+        "https://repo.anaconda.com/miniconda/Miniconda3-py311_24.11.1-0-Linux-x86_64.sh"
+    )
     checksum = "35a58b8961e1187e7311b979968662c6223e86e1451191bed2e67a72b6bd0658"
-    install_from_url(installer_url, prefix=prefix, env=env, run_checks=run_checks, sha256=checksum)
+    print(
+        "Miniconda is subject to terms of service:",
+        "https://legal.anaconda.com/policies/en/#terms-of-service",
+        file=sys.stderr,
+    )
+    install_from_url(
+        installer_url, prefix=prefix, env=env, run_checks=run_checks, sha256=checksum
+    )
 
 
 def install_anaconda(
-    prefix: os.PathLike = PREFIX, env: Dict[AnyStr, AnyStr] = None, run_checks: bool = True
+    prefix: os.PathLike = PREFIX,
+    env: Dict[AnyStr, AnyStr] = None,
+    run_checks: bool = True,
 ):
     """
-    Install Anaconda 2023.03, the latest version built
-    for Python 3.10 at the time of update.
+    Install Anaconda 2024.02, the latest version built
+    for Python 3.11 at the time of update.
 
     Parameters
     ----------
@@ -294,9 +290,18 @@ def install_anaconda(
         Change to False to ignore checks and always attempt
         to run the installation.
     """
-    installer_url = "https://repo.anaconda.com/archive/Anaconda3-2023.03-1-Linux-x86_64.sh"
-    checksum = "95102d7c732411f1458a20bdf47e4c1b0b6c8a21a2edfe4052ca370aaae57bab"
-    install_from_url(installer_url, prefix=prefix, env=env, run_checks=run_checks, sha256=checksum)
+    installer_url = (
+        "https://repo.anaconda.com/archive/Anaconda3-2024.02-1-Linux-x86_64.sh"
+    )
+    checksum = "c536ddb7b4ba738bddbd4e581b29308cb332fa12ae3fa2cd66814bd735dff231"
+    print(
+        "Anaconda Distribution is subject to terms of service:",
+        "https://legal.anaconda.com/policies/en/#terms-of-service",
+        file=sys.stderr,
+    )
+    install_from_url(
+        installer_url, prefix=prefix, env=env, run_checks=run_checks, sha256=checksum
+    )
 
 
 def check(prefix: os.PathLike = PREFIX, verbose: bool = True):
@@ -316,7 +321,9 @@ def check(prefix: os.PathLike = PREFIX, verbose: bool = True):
 
     pymaj, pymin = sys.version_info[:2]
     sitepackages = f"{prefix}/lib/python{pymaj}.{pymin}/site-packages"
-    assert sitepackages in sys.path, f"💥💔💥 PYTHONPATH was not patched! Value: {sys.path}"
+    assert (
+        sitepackages in sys.path
+    ), f"💥💔💥 PYTHONPATH was not patched! Value: {sys.path}"
     assert (
         f"{prefix}/bin" in os.environ["PATH"]
     ), f"💥💔💥 PATH was not patched! Value: {os.environ['PATH']}"
