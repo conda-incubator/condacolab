@@ -220,6 +220,123 @@ def install_from_url(
     else:
         print("🔁 Please restart kernel by clicking on Runtime > Restart runtime.")
 
+def install_from_local(
+    installer_path: str,
+    prefix: os.PathLike = PREFIX,
+    env: Dict[AnyStr, AnyStr] = None,
+    run_checks: bool = True,
+    restart_kernel: bool = True,
+):
+    """
+    Install conda from a local file (instead of a URL), such as a custom constructor installer.
+
+    Parameters
+    ----------
+    installer_path : str
+        Path to the local `.sh` installer file.
+    prefix : Path
+        Target installation directory.
+    env : dict
+        Environment variables to inject into the restarted kernel.
+        LD_LIBRARY_PATH must include `{PREFIX}/lib`, but you can add more.
+        Note: No automatic quoting is done, so values with spaces must be quoted manually.
+        For example: env={"VAR": '"value with spaces"'}
+    run_checks : bool
+        Whether to run pre-installation checks. Set to False to force installation.
+    restart_kernel : bool
+        Whether to restart the kernel automatically after installation.
+    """
+    if run_checks:
+        try:
+            return check(prefix)
+        except AssertionError:
+            pass  # proceed with installation
+
+    t0 = datetime.now()
+    print(f"📁 Using local installer: {installer_path}")
+
+    _run_subprocess(
+        ["bash", installer_path, "-bfp", str(prefix)],
+        "condacolab_install.log",
+    )
+
+    print("📌 Adjusting configuration...")
+    cuda_version = ".".join(os.environ.get("CUDA_VERSION", "*.*.*").split(".")[:2])
+    prefix = Path(prefix)
+    condameta = prefix / "conda-meta"
+    condameta.mkdir(parents=True, exist_ok=True)
+
+    with open(condameta / "pinned", "a") as f:
+        f.write(f"cudatoolkit {cuda_version}.*\n")
+
+    with open(prefix / ".condarc", "a") as f:
+        f.write("always_yes: true\n")
+
+    print("📦 Installing base packages...")
+
+    # Installing the following packages because Colab server expects these packages to be installed in order to launch a Python kernel:
+    #     - matplotlib-base
+    #     - psutil
+    #     - google-colab
+    #     - colabtools
+
+    conda_exe = "mamba" if os.path.isfile(f"{prefix}/bin/mamba") else "conda"
+    
+    # check if any of those packages are already installed. If it is installed, remove it from the list of required packages.
+    
+    output = check_output([f"{prefix}/bin/conda", "list", "--json"])
+    payload = json.loads(output)
+    installed_names = [pkg["name"] for pkg in payload]
+    required_packages = ["matplotlib-base", "psutil", "google-colab"]
+
+    for pkg in required_packages.copy():
+        if pkg in installed_names:
+            required_packages.remove(pkg)
+
+    if required_packages:
+        _run_subprocess(
+            [f"{prefix}/bin/{conda_exe}", "install", "-yq", *required_packages],
+            "conda_task.log",
+        )
+
+    pip_task = _run_subprocess(
+        [f"{prefix}/bin/python", "-m", "pip", "-q", "install", "-U", 
+         "https://github.com/googlecolab/colabtools/archive/refs/heads/main.zip", 
+         "condacolab"],
+        "pip_task.log"
+        )
+    env = env or {}
+    bin_path = f"{prefix}/bin"
+    
+    os.rename(sys.executable, f"{sys.executable}.renamed_by_condacolab.bak")
+    with open(sys.executable, "w") as f:
+        f.write(
+            dedent(
+                f"""
+                #!/bin/bash
+                source {prefix}/etc/profile.d/conda.sh
+                conda activate
+                unset PYTHONPATH
+                mv /usr/bin/lsb_release /usr/bin/lsb_release.renamed_by_condacolab.bak
+                exec {bin_path}/python $@
+                """
+            ).lstrip()
+        )
+    run(["chmod", "+x", sys.executable])
+
+    taken = timedelta(seconds=round((datetime.now() - t0).total_seconds(), 0))
+    print(f"⏲ Done in {taken}")
+
+    if restart_kernel:
+        print("🔁 Restarting kernel...")
+        get_ipython().kernel.do_shutdown(True)
+    elif HAS_IPYWIDGETS:
+        print("🔁 Please restart kernel manually...")
+        restart_kernel_button.on_click(_on_button_clicked)
+        display(restart_kernel_button, restart_button_output)
+    else:
+        print("🔁 Please restart kernel from Runtime > Restart runtime.")
+
 
 def install_mambaforge(*args, **kwargs):
     print(
@@ -374,6 +491,7 @@ def check(prefix: os.PathLike = PREFIX, verbose: bool = True):
 __all__ = [
     "install",
     "install_from_url",
+    "install_from_local",
     "install_mambaforge",
     "install_miniforge",
     "install_miniconda",
