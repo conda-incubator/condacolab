@@ -19,7 +19,6 @@ from pathlib import Path
 from subprocess import run, PIPE, STDOUT
 from typing import Dict, AnyStr
 from urllib.request import urlopen
-from distutils.spawn import find_executable
 
 from IPython import get_ipython
 
@@ -256,7 +255,7 @@ def install_miniconda(
     checksum = "ecb43ee4ae30a7a5af87737e9548ceb21f0a10ec55b8dc40d247aa925b80bfec"
     print(
         "Miniconda is subject to terms of service:",
-        "https://legal.anaconda.com/policies/en/#terms-of-service",
+        "https://anaconda.com/legal/terms/terms-of-service",
         file=sys.stderr,
     )
     install_from_url(
@@ -300,7 +299,7 @@ def install_anaconda(
     checksum = "3ba0a298155c32fbfd80cbc238298560bf69a2df511783054adfc151b76d80d8"
     print(
         "Anaconda Distribution is subject to terms of service:",
-        "https://legal.anaconda.com/policies/en/#terms-of-service",
+        "https://anaconda.com/legal/terms/terms-of-service",
         file=sys.stderr,
     )
     install_from_url(
@@ -321,7 +320,7 @@ def check(prefix: os.PathLike = PREFIX, verbose: bool = True):
     verbose
         Print success message if True
     """
-    assert find_executable("conda"), "💥💔💥 Conda not found!"
+    assert shutil.which("conda"), "💥💔💥 Conda not found!"
 
     pymaj, pymin = sys.version_info[:2]
     sitepackages = f"{prefix}/lib/python{pymaj}.{pymin}/site-packages"
