@@ -23,6 +23,8 @@ jobs:
     container:
       image: ${{ matrix.image }}  # zizmor: ignore[unpinned-images]
       options: --user root
+    env:
+      PYTHONUNBUFFERED: "1"
     strategy:
       fail-fast: false
       matrix:
@@ -66,15 +68,17 @@ jobs:
           # but in CI we need it for a normal Python process
           import os
           with open(os.environ["GITHUB_ENV"], "a") as f:
-            f.write(f"PYTHONPATH={condacolab.PREFIX}/lib/python{condacolab.TARGET_PYTHON}/site-packages\n")
+            f.write(f"CONDACOLABPATH={condacolab.PREFIX}/lib/python{condacolab.TARGET_PYTHON}/site-packages\n")
 
       - name: Check installation
         shell: python3 {0}
         run: |
+          import os
           import sys
           print('Current Python sys.executable:', sys.executable)
-          print('Current Python sys.path:', *sys.path, sep="\n")
-
+          if os.environ["CONDACOLABPATH"] not in sys.path:
+            sys.path.insert(0, os.environ["CONDACOLABPATH"])
+          
           print("Importing: google.colab")
           import google.colab
 
