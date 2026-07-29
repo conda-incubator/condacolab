@@ -19,7 +19,6 @@ from pathlib import Path
 from subprocess import run, PIPE, STDOUT
 from typing import Dict, AnyStr
 from urllib.request import urlopen
-from distutils.spawn import find_executable
 
 from IPython import get_ipython
 
@@ -29,7 +28,7 @@ except ImportError:
     raise RuntimeError("This module must ONLY run as part of a Colab notebook!")
 
 
-__version__ = "0.1.10"
+__version__ = "0.1.11"
 __author__ = "Jaime Rodríguez-Guerra <jaimergp@users.noreply.github.com>"
 
 
@@ -175,7 +174,7 @@ def install_miniforge(
     run_checks: bool = True,
 ):
     """
-    Install Miniforge 24.11.1, built for Python 3.11.
+    Install Miniforge 25.11.1, built for Python 3.12.
 
     Miniforge consists of a Miniconda-like distribution optimized
     and preconfigured for conda-forge packages.
@@ -200,10 +199,10 @@ def install_miniforge(
         to run the installation.
     """
     installer_url = (
-        "https://github.com/jaimergp/miniforge/releases/download/"
-        "24.11.2-1_colab/Miniforge3-colab-24.11.2-1_colab-Linux-x86_64.sh"
+        "https://github.com/conda-forge/miniforge/releases/download/"
+        "25.11.0-1/Miniforge3-25.11.0-1-Linux-x86_64.sh"
     )
-    checksum = "359f81e4bc706c3e237105cc42cb5d5deaee0c89b4391cb70c5cb2c27d4e3677"
+    checksum = "be1bad9d4e67a8753eb76fb4940e9a08036786675c7adf060627e55791bf110d"
     install_from_url(
         installer_url, prefix=prefix, env=env, run_checks=run_checks, sha256=checksum
     )
@@ -227,7 +226,9 @@ def install_miniconda(
     run_checks: bool = True,
 ):
     """
-    Install Miniconda 24.11.1 for Python 3.11.
+    Install Miniconda 26.5.3-1 for Python 3.12.
+
+    Other compatible installers may be available at https://repo.anaconda.com/miniconda/.
 
     Parameters
     ----------
@@ -249,12 +250,12 @@ def install_miniconda(
         to run the installation.
     """
     installer_url = (
-        "https://repo.anaconda.com/miniconda/Miniconda3-py311_24.11.1-0-Linux-x86_64.sh"
+        "https://repo.anaconda.com/miniconda/Miniconda3-py312_26.5.3-1-Linux-x86_64.sh"
     )
-    checksum = "35a58b8961e1187e7311b979968662c6223e86e1451191bed2e67a72b6bd0658"
+    checksum = "ecb43ee4ae30a7a5af87737e9548ceb21f0a10ec55b8dc40d247aa925b80bfec"
     print(
         "Miniconda is subject to terms of service:",
-        "https://legal.anaconda.com/policies/en/#terms-of-service",
+        "https://anaconda.com/legal/terms/terms-of-service",
         file=sys.stderr,
     )
     install_from_url(
@@ -268,8 +269,10 @@ def install_anaconda(
     run_checks: bool = True,
 ):
     """
-    Install Anaconda 2024.02, the latest version built
-    for Python 3.11 at the time of update.
+    Install Anaconda 2024.10-1, the latest version built
+    for Python 3.12 at the time of update.
+
+    Other compatible installers may be available at https://repo.anaconda.com/archive/
 
     Parameters
     ----------
@@ -291,12 +294,12 @@ def install_anaconda(
         to run the installation.
     """
     installer_url = (
-        "https://repo.anaconda.com/archive/Anaconda3-2024.02-1-Linux-x86_64.sh"
+        "https://repo.anaconda.com/archive/Anaconda3-2024.10-1-Linux-x86_64.sh"
     )
-    checksum = "c536ddb7b4ba738bddbd4e581b29308cb332fa12ae3fa2cd66814bd735dff231"
+    checksum = "3ba0a298155c32fbfd80cbc238298560bf69a2df511783054adfc151b76d80d8"
     print(
         "Anaconda Distribution is subject to terms of service:",
-        "https://legal.anaconda.com/policies/en/#terms-of-service",
+        "https://anaconda.com/legal/terms/terms-of-service",
         file=sys.stderr,
     )
     install_from_url(
@@ -317,7 +320,7 @@ def check(prefix: os.PathLike = PREFIX, verbose: bool = True):
     verbose
         Print success message if True
     """
-    assert find_executable("conda"), "💥💔💥 Conda not found!"
+    assert shutil.which("conda"), "💥💔💥 Conda not found!"
 
     pymaj, pymin = sys.version_info[:2]
     sitepackages = f"{prefix}/lib/python{pymaj}.{pymin}/site-packages"
