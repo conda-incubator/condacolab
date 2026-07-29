@@ -30,12 +30,12 @@ jobs:
           - name: CPU, Miniforge
             image: us-docker.pkg.dev/colab-images/public/cpu-runtime:latest
             installer: miniforge
-          - name: CPU, Miniconda
-            image: us-docker.pkg.dev/colab-images/public/cpu-runtime:latest
-            installer: miniconda
-          - name: CPU, Anaconda
-            image: us-docker.pkg.dev/colab-images/public/cpu-runtime:latest
-            installer: anaconda
+          # - name: CPU, Miniconda
+          #   image: us-docker.pkg.dev/colab-images/public/cpu-runtime:latest
+          #   installer: miniconda
+          # - name: CPU, Anaconda
+          #   image: us-docker.pkg.dev/colab-images/public/cpu-runtime:latest
+          #   installer: anaconda
           - name: GPU, Miniforge
             image: us-docker.pkg.dev/colab-images/public/runtime:latest
             installer: miniforge
@@ -71,22 +71,23 @@ jobs:
       - name: Check installation
         shell: python3 {0}
         run: |
-          print("Checking: condacolab")
-          import condacolab
-          condacolab.check()
-
           import sys
           print('Current Python sys.executable:', sys.executable)
+          print('Current Python sys.path:', *sys.path, sep="\n")
 
           print("Importing: google.colab")
           import google.colab
+
+          print("Checking: condacolab")
+          import condacolab
+          condacolab.check()
 
           print("Running: conda info -a")
           import conda.cli
           conda.cli.main("info", "-a")
           print("Running: conda list")
           conda.cli.main("list")
-      
+
       - name: Test solver and constraints
         env:
           CONDA_QUIET: "1"
