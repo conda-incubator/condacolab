@@ -33,6 +33,7 @@ __author__ = "Jaime Rodríguez-Guerra <jaimergp@users.noreply.github.com>"
 
 
 PREFIX = "/usr/local"
+TARGET_PYTHON = "3.12"
 
 
 def _chunked_sha256(path, chunksize=1_048_576):
@@ -41,6 +42,15 @@ def _chunked_sha256(path, chunksize=1_048_576):
         while chunk := f.read(chunksize):
             hasher.update(chunk)
     return hasher.hexdigest()
+
+
+def _check_python():
+    colab_python = ".".join(map(str, sys.version_info[:2]))
+    assert colab_python == TARGET_PYTHON, (
+        f"💥💔💥 Colab's Python ({colab_python}) does not match expected version: {TARGET_PYTHON}. "
+        "Consider running a different Runtime Version to make them match. More information: "
+        "https://github.com/conda-incubator/condacolab/issues/79"
+    )
 
 
 def install_from_url(
@@ -86,6 +96,8 @@ def install_from_url(
         except AssertionError:
             pass  # just install
 
+    _check_python()
+
     t0 = datetime.now()
     print(f"⏬ Downloading {installer_url}...")
     installer_fn = "__installer__.sh"
@@ -94,9 +106,9 @@ def install_from_url(
 
     if sha256 is not None:
         digest = _chunked_sha256(installer_fn)
-        assert (
-            digest == sha256
-        ), f"💥💔💥 Checksum failed! Expected {sha256}, got {digest}"
+        assert digest == sha256, (
+            f"💥💔💥 Checksum failed! Expected {sha256}, got {digest}"
+        )
 
     print("📦 Installing...")
     task = run(
@@ -109,9 +121,9 @@ def install_from_url(
     os.unlink(installer_fn)
     with open("condacolab_install.log", "w") as f:
         f.write(task.stdout)
-    assert (
-        task.returncode == 0
-    ), "💥💔💥 The installation failed! Logs are available at `/content/condacolab_install.log`."
+    assert task.returncode == 0, (
+        "💥💔💥 The installation failed! Logs are available at `/content/condacolab_install.log`."
+    )
 
     print("📌 Adjusting configuration...")
     cuda_version = os.environ.get("CUDA_VERSION", "*.*.*").split(".")[:2]
@@ -325,15 +337,18 @@ def check(prefix: os.PathLike = PREFIX, verbose: bool = True):
 
     pymaj, pymin = sys.version_info[:2]
     sitepackages = f"{prefix}/lib/python{pymaj}.{pymin}/site-packages"
-    assert (
-        sitepackages in sys.path
-    ), f"💥💔💥 PYTHONPATH was not patched! Value: {sys.path}"
-    assert (
-        f"{prefix}/bin" in os.environ["PATH"]
-    ), f"💥💔💥 PATH was not patched! Value: {os.environ['PATH']}"
-    assert (
-        f"{prefix}/lib" in os.environ["LD_LIBRARY_PATH"]
-    ), f"💥💔💥 LD_LIBRARY_PATH was not patched! Value: {os.environ['LD_LIBRARY_PATH']}"
+    assert f"{pymaj}.{pymin}" == TARGET_PYTHON, (
+        f"💥💔💥 Python version {pymaj}.{pymin} does not match expected value: {TARGET_PYTHON}"
+    )
+    assert sitepackages in sys.path, (
+        f"💥💔💥 PYTHONPATH was not patched! Value: {sys.path}"
+    )
+    assert f"{prefix}/bin" in os.environ["PATH"], (
+        f"💥💔💥 PATH was not patched! Value: {os.environ['PATH']}"
+    )
+    assert f"{prefix}/lib" in os.environ["LD_LIBRARY_PATH"], (
+        f"💥💔💥 LD_LIBRARY_PATH was not patched! Value: {os.environ['LD_LIBRARY_PATH']}"
+    )
     if verbose:
         print("✨🍰✨ Everything looks OK!")
 
@@ -347,4 +362,5 @@ __all__ = [
     "install_anaconda",
     "check",
     "PREFIX",
+    "TARGET_PYTHON",
 ]
