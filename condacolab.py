@@ -114,21 +114,22 @@ def install_from_url(
     ), "💥💔💥 The installation failed! Logs are available at `/content/condacolab_install.log`."
 
     print("📌 Adjusting configuration...")
-    cuda_version = ".".join(os.environ.get("CUDA_VERSION", "*.*.*").split(".")[:2])
+    cuda_version = os.environ.get("CUDA_VERSION", "*.*.*").split(".")[:2]
     prefix = Path(prefix)
     condameta = prefix / "conda-meta"
     condameta.mkdir(parents=True, exist_ok=True)
     pymaj, pymin = sys.version_info[:2]
 
-    if cuda_version.startswith("12"):
-        cudatoolkit = "cuda-version 12.*"
+    if cuda_version[0] == "11":
+        cuda_pin = f"cudatoolkit {cuda_version[0]}.{cuda_version[1]}.*"
     else:
-        cudatoolkit = f"cudatoolkit {cuda_version}.*"
+        # Assume forward compatibility on major version
+        cuda_pin = f"cuda-version {cuda_version[0]}.*"
 
     with open(condameta / "pinned", "a") as f:
         f.write(f"python {pymaj}.{pymin}.*\n")
         f.write(f"python_abi {pymaj}.{pymin}.* *cp{pymaj}{pymin}*\n")
-        f.write(f"{cudatoolkit}\n")
+        f.write(f"{cuda_pin}\n")
 
     with open(prefix / ".condarc", "a") as f:
         f.write("always_yes: true\n")
