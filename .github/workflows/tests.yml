@@ -9,11 +9,10 @@ on:
       - "main"
       - "0.1.x"
   pull_request:
-  schedule:
-    # Nightly tests run on master by default:
-    #   Scheduled workflows run on the latest commit on the default or base branch.
-    #   (from https://help.github.com/en/actions/reference/events-that-trigger-workflows#scheduled-events-schedule)
-    - cron: "0 0 * * 1"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: true
 
 permissions: {}
 
@@ -25,6 +24,7 @@ jobs:
       image: ${{ matrix.image }}  # zizmor: ignore[unpinned-images]
       options: --user root
     strategy:
+      fail-fast: false
       matrix:
         include:
           - name: CPU runtime
@@ -49,19 +49,21 @@ jobs:
           python3 -m pip install -e .
 
       - name: Run installation
+        shell: python3
         run: |
-          python3 -c "
           import condacolab
           condacolab.install(restart_kernel=False)
-          "
 
       - name: Check installation
-        run: |          
-          python3 -c "
-          import sys
-          import ipykernel
-          import google.colab
+        shell: python3
+        run: |
           import condacolab
           condacolab.check()
+
+          import sys
           print('Current Python sys.executable:', sys.executable)
-          "
+
+          import google.colab
+
+          import conda.cli
+          conda.cli.main("info", "-a")
