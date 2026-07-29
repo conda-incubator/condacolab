@@ -72,3 +72,13 @@ jobs:
           conda.cli.main("info", "-a")
           print("Running: conda list")
           conda.cli.main("list")
+      
+      - name: Test solver and constraints
+        env:
+          CONDA_QUIET: "1"
+          CONDA_DRY_RUN: "1"
+        run: |
+          set -x
+          conda install python
+          conda install cuda-version
+          conda install openmm
