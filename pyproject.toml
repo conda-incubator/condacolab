@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "condacolab"
-version = "0.1.10"
+version = "0.1.11"
 description = "Install Conda and friends on Google Colab, easily"
 readme = "README.md"
 authors = ["Jaime Rodríguez-Guerra <jaimergp@users.noreply.github.com>"]
@@ -9,7 +9,7 @@ homepage = "https://github.com/conda-incubator/condacolab"
 repository = "https://github.com/conda-incubator/condacolab"
 
 [tool.poetry.dependencies]
-python = "^3.11"
+python = "^3.12"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
