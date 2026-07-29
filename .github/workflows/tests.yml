@@ -72,18 +72,22 @@ jobs:
 
       - name: Check installation
         shell: python3 {0}
+        env:
+          runner_workspace: ${{ runner.workspace }}
         run: |
           import os
           import sys
           print('Current Python sys.executable:', sys.executable)
-          print("sys.path", *sys.path, sep="\n")
+          print("Starting sys.path", *sys.path, sep="\n")
           for path in (
             "/usr/lib/python3/dist-packages",
             os.environ["CONDACOLABPYTHON"] + "/dist-packages",
             os.environ["CONDACOLABPYTHON"] + "/site-packages",
+            os.environ["runner_workspace"],
           ):
-            if path not in sys.path:
-              sys.path.insert(0, path)
+              if path not in sys.path:
+                sys.path.insert(0, path)
+          print("Patched sys.path", *sys.path, sep="\n")
           
           print("Importing: google.colab")
           import google.colab
