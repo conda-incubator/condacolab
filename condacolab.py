@@ -10,6 +10,8 @@ Usage:
 For more details, check the docstrings for ``install_from_url()``.
 """
 
+from __future__ import annotations
+
 import hashlib
 import os
 import sys
@@ -17,13 +19,12 @@ import shutil
 from datetime import datetime, timedelta
 from pathlib import Path
 from subprocess import run, PIPE, STDOUT
-from typing import Dict, AnyStr
 from urllib.request import urlopen
 
 from IPython import get_ipython
 
 try:
-    import google.colab
+    import google.colab  # noqa
 except ImportError:
     raise RuntimeError("This module must ONLY run as part of a Colab notebook!")
 
@@ -36,7 +37,7 @@ PREFIX = "/usr/local"
 TARGET_PYTHON = "3.12"
 
 
-def _chunked_sha256(path, chunksize=1_048_576):
+def _chunked_sha256(path: str | Path, chunksize: int = 1_048_576) -> str:
     hasher = hashlib.sha256()
     with open(path, "rb") as f:
         while chunk := f.read(chunksize):
@@ -44,7 +45,7 @@ def _chunked_sha256(path, chunksize=1_048_576):
     return hasher.hexdigest()
 
 
-def _check_python():
+def _check_python() -> None:
     colab_python = ".".join(map(str, sys.version_info[:2]))
     assert colab_python == TARGET_PYTHON, (
         f"💥💔💥 Colab's Python ({colab_python}) does not match expected version: {TARGET_PYTHON}. "
@@ -54,12 +55,12 @@ def _check_python():
 
 
 def install_from_url(
-    installer_url: AnyStr,
-    prefix: os.PathLike = PREFIX,
-    env: Dict[AnyStr, AnyStr] = None,
+    installer_url: str,
+    prefix: str | Path = PREFIX,
+    env: dict[str, str] | None = None,
     run_checks: bool = True,
-    sha256: AnyStr = None,
-):
+    sha256: str | None = None,
+) -> None:
     """
     Download and run a constructor-like installer, patching
     the necessary bits so it works on Colab right away.
@@ -182,10 +183,10 @@ def install_from_url(
 
 
 def install_miniforge(
-    prefix: os.PathLike = PREFIX,
-    env: Dict[AnyStr, AnyStr] = None,
+    prefix: str | Path = PREFIX,
+    env: dict[str, str] | None = None,
     run_checks: bool = True,
-):
+) -> None:
     """
     Install Miniforge 25.11.1, built for Python 3.12.
 
@@ -234,10 +235,10 @@ def install_mambaforge(*args, **kwargs):
 
 
 def install_miniconda(
-    prefix: os.PathLike = PREFIX,
-    env: Dict[AnyStr, AnyStr] = None,
+    prefix: str | Path = PREFIX,
+    env: dict[str, str] | None = None,
     run_checks: bool = True,
-):
+) -> None:
     """
     Install Miniconda 26.5.3-1 for Python 3.12.
 
@@ -277,10 +278,10 @@ def install_miniconda(
 
 
 def install_anaconda(
-    prefix: os.PathLike = PREFIX,
-    env: Dict[AnyStr, AnyStr] = None,
+    prefix: str | Path = PREFIX,
+    env: dict[str, str] | None = None,
     run_checks: bool = True,
-):
+) -> None:
     """
     Install Anaconda 2024.10-1, the latest version built
     for Python 3.12 at the time of update.
@@ -320,7 +321,7 @@ def install_anaconda(
     )
 
 
-def check(prefix: os.PathLike = PREFIX, verbose: bool = True):
+def check(prefix: str | Path = PREFIX, verbose: bool = True) -> None:
     """
     Run some basic checks to ensure that ``conda`` has been installed
     correctly
