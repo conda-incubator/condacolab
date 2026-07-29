@@ -54,6 +54,12 @@ jobs:
           import condacolab
           condacolab.install(restart_kernel=False)
 
+          # This is done by condacolab on the kernel config
+          # but in CI we need it for a normal Python process
+          import os
+          with open(os.environ["GITHUB_ENV", "a"]) as f:
+            f.write(f"PYTHONPATH={PREFIX}/lib/python{TARGET_PYTHON}/site-packages\n")
+
       - name: Check installation
         shell: python3 {0}
         run: |
