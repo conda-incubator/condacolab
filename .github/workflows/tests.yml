@@ -1,0 +1,67 @@
+name: CI
+
+on:
+  # GitHub has started calling new repo's first branch "main" https://github.com/github/renaming
+  # Existing codes likely still have "master" as the primary branch
+  # Both are tracked here to keep legacy and new codes working
+  push:
+    branches:
+      - "main"
+      - "0.1.x"
+  pull_request:
+  schedule:
+    # Nightly tests run on master by default:
+    #   Scheduled workflows run on the latest commit on the default or base branch.
+    #   (from https://help.github.com/en/actions/reference/events-that-trigger-workflows#scheduled-events-schedule)
+    - cron: "0 0 * * 1"
+
+permissions: {}
+
+jobs:
+  test:
+    name: ${{ matrix.name }}
+    runs-on: ubuntu-latest
+    container:
+      image: ${{ matrix.image }}  # zizmor: ignore[unpinned-images]
+      options: --user root
+    strategy:
+      matrix:
+        include:
+          - name: CPU runtime
+            image: us-docker.pkg.dev/colab-images/public/cpu-runtime:latest
+          - name: GPU runtime
+            image: us-docker.pkg.dev/colab-images/public/runtime:latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Verify Environment Alignment
+        run: |
+          echo "=== Container OS Info ==="
+          cat /etc/os-release
+          echo "=== Container Python Executable ==="
+          which python3
+          python3 --version
+
+      - name: Install condacolab
+        run: |
+          python3 -m pip install -e .
+
+      - name: Run installation
+        run: |
+          python3 -c "
+          import condacolab
+          condacolab.install(restart_kernel=False)
+          "
+
+      - name: Check installation
+        run: |          
+          python3 -c "
+          import sys
+          import ipykernel
+          import google.colab
+          import condacolab
+          condacolab.check()
+          print('Current Python sys.executable:', sys.executable)
+          "
