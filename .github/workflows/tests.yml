@@ -27,10 +27,18 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - name: CPU runtime
+          - name: CPU, Miniforge
             image: us-docker.pkg.dev/colab-images/public/cpu-runtime:latest
-          - name: GPU runtime
+            installer: miniforge
+          - name: CPU, Miniconda
+            image: us-docker.pkg.dev/colab-images/public/cpu-runtime:latest
+            installer: miniconda
+          - name: CPU, Anaconda
+            image: us-docker.pkg.dev/colab-images/public/cpu-runtime:latest
+            installer: anaconda
+          - name: GPU, Miniforge
             image: us-docker.pkg.dev/colab-images/public/runtime:latest
+            installer: miniforge
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -52,12 +60,12 @@ jobs:
         shell: python3 {0}
         run: |
           import condacolab
-          condacolab.install(restart_kernel=False)
+          condacolab.install_${{ matrix.installer }}(restart_kernel=False)
 
           # This is done by condacolab on the kernel config
           # but in CI we need it for a normal Python process
           import os
-          with open(os.environ["GITHUB_ENV", "a"]) as f:
+          with open(os.environ["GITHUB_ENV"], "a") as f:
             f.write(f"PYTHONPATH={PREFIX}/lib/python{TARGET_PYTHON}/site-packages\n")
 
       - name: Check installation
