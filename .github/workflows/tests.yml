@@ -49,21 +49,26 @@ jobs:
           python3 -m pip install -e .
 
       - name: Run installation
-        shell: python3
+        shell: python3 {0}
         run: |
           import condacolab
           condacolab.install(restart_kernel=False)
 
       - name: Check installation
-        shell: python3
+        shell: python3 {0}
         run: |
+          print("Checking: condacolab")
           import condacolab
           condacolab.check()
 
           import sys
           print('Current Python sys.executable:', sys.executable)
 
+          print("Importing: google.colab")
           import google.colab
 
+          print("Running: conda info -a")
           import conda.cli
           conda.cli.main("info", "-a")
+          print("Running: conda list")
+          conda.cli.main("list")
