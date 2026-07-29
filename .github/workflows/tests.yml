@@ -68,7 +68,7 @@ jobs:
           # but in CI we need it for a normal Python process
           import os
           with open(os.environ["GITHUB_ENV"], "a") as f:
-            f.write(f"CONDACOLABPATH={condacolab.PREFIX}/lib/python{condacolab.TARGET_PYTHON}/site-packages\n")
+            f.write(f"CONDACOLABPYTHON={condacolab.PREFIX}/lib/python{condacolab.TARGET_PYTHON}\n")
 
       - name: Check installation
         shell: python3 {0}
@@ -76,8 +76,14 @@ jobs:
           import os
           import sys
           print('Current Python sys.executable:', sys.executable)
-          if os.environ["CONDACOLABPATH"] not in sys.path:
-            sys.path.insert(0, os.environ["CONDACOLABPATH"])
+          print("sys.path", *sys.path, sep="\n")
+          for path in (
+            "/usr/lib/python3/dist-packages",
+            os.environ["CONDACOLABPYTHON"] + "/dist-packages",
+            os.environ["CONDACOLABPYTHON"] + "/site-packages",
+          ):
+            if path not in sys.path:
+              sys.path.insert(0, path)
           
           print("Importing: google.colab")
           import google.colab
