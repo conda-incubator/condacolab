@@ -94,6 +94,8 @@ jobs:
 
           print("Checking: condacolab")
           import condacolab
+          print(getattr(condacolab, "__file__", "NA"))
+          print(getattr(condacolab, "__path__", "NA"))
           condacolab.check()
 
           print("Running: conda info -a")
