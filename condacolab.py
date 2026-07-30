@@ -60,6 +60,7 @@ def install_from_url(
     env: dict[str, str] | None = None,
     run_checks: bool = True,
     sha256: str | None = None,
+    restart_kernel: bool = True,
 ) -> None:
     """
     Download and run a constructor-like installer, patching
@@ -178,14 +179,20 @@ def install_from_url(
     taken = timedelta(seconds=round((datetime.now() - t0).total_seconds(), 0))
     print(f"⏲ Done in {taken}")
 
-    print("🔁 Restarting kernel...")
-    get_ipython().kernel.do_shutdown(True)
+    if restart_kernel:
+        print("🔁 Restarting kernel...")
+        get_ipython().kernel.do_shutdown(True)
+    else:
+        print(
+            "✅ Done. To apply changes, please restart kernel via Runtime> Restart Session."
+        )
 
 
 def install_miniforge(
     prefix: str | Path = PREFIX,
     env: dict[str, str] | None = None,
     run_checks: bool = True,
+    restart_kernel: bool = True,
 ) -> None:
     """
     Install Miniforge 25.11.1, built for Python 3.12.
@@ -218,7 +225,12 @@ def install_miniforge(
     )
     checksum = "be1bad9d4e67a8753eb76fb4940e9a08036786675c7adf060627e55791bf110d"
     install_from_url(
-        installer_url, prefix=prefix, env=env, run_checks=run_checks, sha256=checksum
+        installer_url,
+        prefix=prefix,
+        env=env,
+        run_checks=run_checks,
+        sha256=checksum,
+        restart_kernel=restart_kernel,
     )
 
 
@@ -238,6 +250,7 @@ def install_miniconda(
     prefix: str | Path = PREFIX,
     env: dict[str, str] | None = None,
     run_checks: bool = True,
+    restart_kernel: bool = True,
 ) -> None:
     """
     Install Miniconda 26.5.3-1 for Python 3.12.
@@ -273,7 +286,12 @@ def install_miniconda(
         file=sys.stderr,
     )
     install_from_url(
-        installer_url, prefix=prefix, env=env, run_checks=run_checks, sha256=checksum
+        installer_url,
+        prefix=prefix,
+        env=env,
+        run_checks=run_checks,
+        sha256=checksum,
+        restart_kernel=restart_kernel,
     )
 
 
@@ -281,6 +299,7 @@ def install_anaconda(
     prefix: str | Path = PREFIX,
     env: dict[str, str] | None = None,
     run_checks: bool = True,
+    restart_kernel: bool = True,
 ) -> None:
     """
     Install Anaconda 2024.10-1, the latest version built
@@ -317,7 +336,12 @@ def install_anaconda(
         file=sys.stderr,
     )
     install_from_url(
-        installer_url, prefix=prefix, env=env, run_checks=run_checks, sha256=checksum
+        installer_url,
+        prefix=prefix,
+        env=env,
+        run_checks=run_checks,
+        sha256=checksum,
+        restart_kernel=restart_kernel,
     )
 
 
