@@ -69,6 +69,7 @@ jobs:
           import os
           with open(os.environ["GITHUB_ENV"], "a") as f:
             f.write(f"CONDACOLABPYTHON={condacolab.PREFIX}/lib/python{condacolab.TARGET_PYTHON}\n")
+            f.write(f"LD_LIBRARY_PATH={condacolab.PREFIX}/lib\n")
 
       - name: Check installation
         shell: python3 {0}
@@ -91,8 +92,6 @@ jobs:
 
           print("Checking: condacolab")
           import condacolab
-          print(getattr(condacolab, "__file__", "NA"))
-          print(getattr(condacolab, "__path__", "NA"))
           condacolab.check()
 
           print("Running: conda info -a")
