@@ -1,0 +1,63 @@
+name: Publish to PyPI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - "0.1.x"
+  release:
+    types:
+      - published
+
+permissions: {}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.x"
+
+      - name: Check module and pyproject.toml are in sync
+        run: python scripts/check_in_sync.py
+
+      - name: Install build tools
+        run: python -m pip install --upgrade pip wheel setuptools build twine
+
+      - name: Build wheels
+        run: python -m build --sdist --wheel . --outdir dist
+
+      - name: Check wheels
+        working-directory: dist
+        run: |
+          ls -alh
+          python -m pip install *.whl
+          python -m twine check *
+
+      - name: Upload release distributions
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: release-dists
+          path: dist/
+
+  publish:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'release'
+    needs: [build]
+    permissions:
+      id-token: write
+
+    steps:
+      - name: Retrieve release distributions
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: release-dists
+          path: dist/
+      - name: Publish release distributions to PyPI
+        uses: pypa/gh-action-pypi-publish@ba38be9e461d3875417946c167d0b5f3d385a247 # v1.14.1

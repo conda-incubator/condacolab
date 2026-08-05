@@ -29,12 +29,12 @@ except ImportError:
     raise RuntimeError("This module must ONLY run as part of a Colab notebook!")
 
 
-__version__ = "0.1.12"
+__version__ = "0.1.12"  # Keep in sync with pyproject.toml
 __author__ = "Jaime Rodríguez-Guerra <jaimergp@users.noreply.github.com>"
 
 
 PREFIX = "/usr/local"
-TARGET_PYTHON = "3.12"
+TARGET_PYTHON = "3.12"  # Keep in sync with pyproject.toml
 
 
 def _chunked_sha256(path: str | Path, chunksize: int = 1_048_576) -> str:
