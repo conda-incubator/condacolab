@@ -8,7 +8,7 @@ version = "0.1.12"
 description = "Install Conda and friends on Google Colab, easily"
 readme = "README.md"
 license = "MIT"
-requires-python = "==3.12"
+requires-python = "==3.12.*"
 
 [[project.authors]]
 name = "Jaime Rodríguez-Guerra"

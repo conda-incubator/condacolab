@@ -34,7 +34,7 @@ def main():
     
     # Extract version and python-requires from pyproject.toml
     version_match = re.search(r'version\s*=\s*["\']([^"\']+)["\']', pyproject_content)
-    requires_python_match = re.search(r'requires-python\s*=\s*["\']==([0-9a-z\.]+)["\']', pyproject_content)
+    requires_python_match = re.search(r'requires-python\s*=\s*["\']==([0-9a-z\.]+)\.\*["\']', pyproject_content)
     
     if not version_match:
         print("❌ ERROR: Could not find version in pyproject.toml")
