@@ -6,7 +6,6 @@ on:
   # Both are tracked here to keep legacy and new codes working
   push:
     branches:
-      - "main"
       - "0.1.x"
   pull_request:
 
