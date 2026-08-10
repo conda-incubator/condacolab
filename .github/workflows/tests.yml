@@ -31,12 +31,12 @@ jobs:
           - name: CPU, Miniforge
             image: us-docker.pkg.dev/colab-images/public/cpu-runtime:latest
             installer: miniforge
-          - name: CPU, Miniconda
-            image: us-docker.pkg.dev/colab-images/public/cpu-runtime:latest
-            installer: miniconda
-          - name: CPU, Anaconda
-            image: us-docker.pkg.dev/colab-images/public/cpu-runtime:latest
-            installer: anaconda
+          # - name: CPU, Miniconda
+          #   image: us-docker.pkg.dev/colab-images/public/cpu-runtime:latest
+          #   installer: miniconda
+          # - name: CPU, Anaconda
+          #   image: us-docker.pkg.dev/colab-images/public/cpu-runtime:latest
+          #   installer: anaconda
           - name: GPU, Miniforge
             image: us-docker.pkg.dev/colab-images/public/runtime:latest
             installer: miniforge
