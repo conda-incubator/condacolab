@@ -331,20 +331,21 @@ def install_from_url(
 
     if os.path.exists(sys.executable):
         os.rename(sys.executable, f"{sys.executable}.renamed_by_condacolab.bak")
-        with open(sys.executable, "w") as f:
-            f.write(
-                dedent(
-                    f"""
-                    #!/bin/bash
-                    source {prefix}/etc/profile.d/conda.sh
-                    conda activate
-                    unset PYTHONPATH
-                    mv /usr/bin/lsb_release /usr/bin/lsb_release.renamed_by_condacolab.bak
-                    exec {bin_path}/python $@
-                    """
-                ).lstrip()
-            )
-        run(["chmod", "+x", sys.executable])
+
+    with open(sys.executable, "w") as f:
+        f.write(
+            dedent(
+                f"""
+                #!/bin/bash
+                source {prefix}/etc/profile.d/conda.sh
+                conda activate
+                unset PYTHONPATH
+                mv /usr/bin/lsb_release /usr/bin/lsb_release.renamed_by_condacolab.bak
+                exec {bin_path}/python $@
+                """
+            ).lstrip()
+        )
+    run(["chmod", "+x", sys.executable])
 
     taken = timedelta(seconds=round((datetime.now() - t0).total_seconds(), 0))
     print(f"⏲ Done in {taken}")
