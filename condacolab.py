@@ -136,7 +136,7 @@ def install_from_url(
     with urlopen(installer_url) as response, open(installer_fn, "wb") as out:
         shutil.copyfileobj(response, out)
 
-    condacolab_task = _run_subprocess(
+    _run_subprocess(
         ["bash", installer_fn, "-bfp", str(prefix)],
         "condacolab_install.log",
     )
@@ -179,7 +179,7 @@ def install_from_url(
             "conda_task.log",
         )
 
-    pip_task = _run_subprocess(
+    _run_subprocess(
         [
             f"{prefix}/bin/python",
             "-m",
