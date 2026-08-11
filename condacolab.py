@@ -30,10 +30,13 @@ try:
     from ruamel.yaml import YAML
     from ruamel.yaml.comments import CommentedMap
 except ImportError as e:
-    raise RuntimeError("Could not find ruamel.yaml, plese install using `!pip install ruamel.yaml`!") from e
+    raise RuntimeError(
+        "Could not find ruamel.yaml, plese install using `!pip install ruamel.yaml`!"
+    ) from e
 
 try:
     import ipywidgets as widgets
+
     HAS_IPYWIDGETS = True
 except ImportError:
     HAS_IPYWIDGETS = False
@@ -50,21 +53,23 @@ __author__ = (
     "Surbhi Sharma <ssurbhi560@users.noreply.github.com>"
 )
 
-yaml=YAML()
+yaml = YAML()
 
 PREFIX = "/opt/conda"
 
 if HAS_IPYWIDGETS:
     restart_kernel_button = widgets.Button(description="Restart kernel now...")
-    restart_button_output = widgets.Output(layout={'border': '1px solid black'})
+    restart_button_output = widgets.Output(layout={"border": "1px solid black"})
 else:
     restart_kernel_button = restart_button_output = None
 
+
 def _on_button_clicked(b):
-  with restart_button_output:
-    get_ipython().kernel.do_shutdown(True)
-    print("Kernel restarted!")
-    restart_kernel_button.close()
+    with restart_button_output:
+        get_ipython().kernel.do_shutdown(True)
+        print("Kernel restarted!")
+        restart_kernel_button.close()
+
 
 def _run_subprocess(command, logs_filename):
     """
@@ -80,23 +85,25 @@ def _run_subprocess(command, logs_filename):
     """
 
     task = run(
-            command,
-            check=False,
-            stdout=PIPE,
-            stderr=STDOUT,
-            text=True,
-        )
+        command,
+        check=False,
+        stdout=PIPE,
+        stderr=STDOUT,
+        text=True,
+    )
 
     logs_file_path = "/var/condacolab"
     os.makedirs(logs_file_path, exist_ok=True)
 
     with open(f"{logs_file_path}/{logs_filename}", "w") as f:
         f.write(task.stdout)
-    assert (task.returncode == 0), f"💥💔💥 The installation failed! Logs are available at `{logs_file_path}/{logs_filename}`."
+    assert task.returncode == 0, (
+        f"💥💔💥 The installation failed! Logs are available at `{logs_file_path}/{logs_filename}`."
+    )
 
 
 def _update_environment(
-    prefix:os.PathLike = PREFIX,
+    prefix: os.PathLike = PREFIX,
     environment_file: str = None,
     python_version: str = None,
     specs: Iterable[str] = (),
@@ -104,7 +111,7 @@ def _update_environment(
     pip_args: Iterable[str] = (),
     extra_conda_args: Iterable[str] = (),
     conda_exe: str = "conda",
-    ):
+):
     """
     Install the dependencies in conda base environment during
     the condacolab installion.
@@ -144,23 +151,28 @@ def _update_environment(
             pip_args_dict = {"pip": pip_args}
             env_details["dependencies"].append(pip_args_dict)
 
-        with open(environment_file_path, 'w') as f:
+        with open(environment_file_path, "w") as f:
             yaml.indent(mapping=2, sequence=4, offset=2)
             yaml.dump(env_details, f)
     else:
         # If URL is given for environment.yaml file
         if environment_file.startswith(("http://", "https://")):
             try:
-                with urlopen(environment_file) as response, open(environment_file_path, "wb") as out:
+                with (
+                    urlopen(environment_file) as response,
+                    open(environment_file_path, "wb") as out,
+                ):
                     shutil.copyfileobj(response, out)
             except HTTPError as e:
-                raise HTTPError("The URL you entered is not working, please check it again.") from e
+                raise HTTPError(
+                    "The URL you entered is not working, please check it again."
+                ) from e
 
         # If path is given for environment.yaml file
         else:
             shutil.copy(environment_file, environment_file_path)
 
-        with open(environment_file_path, 'r') as f:
+        with open(environment_file_path, "r") as f:
             env_details = yaml.load(f.read())
 
         for key in env_details:
@@ -182,12 +194,21 @@ def _update_environment(
                         pip_args_dict = CommentedMap([("pip", [*pip_args])])
                         env_details["dependencies"].append(pip_args_dict)
 
-        with open(environment_file_path, 'w') as f:
+        with open(environment_file_path, "w") as f:
             f.truncate(0)
             yaml.dump(env_details, f)
 
     _run_subprocess(
-        [conda_exe, "env", "update", "-n", "base", "-f", environment_file_path, *extra_conda_args],
+        [
+            conda_exe,
+            "env",
+            "update",
+            "-n",
+            "base",
+            "-f",
+            environment_file_path,
+            *extra_conda_args,
+        ],
         "environment_file_update.log",
     )
 
@@ -233,8 +254,8 @@ def install_from_url(
         Change to False to ignore checks and always attempt
         to run the installation.
     restart_kernel
-        Variable to manage the kernel restart during the installation 
-        of condacolab. Set it `False` to stop the kernel from restarting 
+        Variable to manage the kernel restart during the installation
+        of condacolab. Set it `False` to stop the kernel from restarting
         automatically and get a button instead to do it.
     """
     if run_checks:
@@ -252,7 +273,7 @@ def install_from_url(
     condacolab_task = _run_subprocess(
         ["bash", installer_fn, "-bfp", str(prefix)],
         "condacolab_install.log",
-        )
+    )
 
     print("📌 Adjusting configuration...")
     cuda_version = ".".join(os.environ.get("CUDA_VERSION", "*.*.*").split(".")[:2])
@@ -268,11 +289,11 @@ def install_from_url(
 
     print("📦 Installing...")
 
-# Installing the following packages because Colab server expects these packages to be installed in order to launch a Python kernel:
-#     - matplotlib-base
-#     - psutil
-#     - google-colab
-#     - colabtools
+    # Installing the following packages because Colab server expects these packages to be installed in order to launch a Python kernel:
+    #     - matplotlib-base
+    #     - psutil
+    #     - google-colab
+    #     - colabtools
 
     conda_exe = "mamba" if os.path.isfile(f"{prefix}/bin/mamba") else "conda"
 
@@ -280,7 +301,7 @@ def install_from_url(
 
     output = check_output([f"{prefix}/bin/conda", "list", "--json"])
     payload = json.loads(output)
-    installed_names = [pkg["name"] for pkg in payload] 
+    installed_names = [pkg["name"] for pkg in payload]
     required_packages = ["matplotlib-base", "psutil", "google-colab"]
     for pkg in required_packages.copy():
         if pkg in installed_names:
@@ -293,9 +314,18 @@ def install_from_url(
         )
 
     pip_task = _run_subprocess(
-        [f"{prefix}/bin/python", "-m", "pip", "-q", "install", "-U", "https://github.com/googlecolab/colabtools/archive/refs/heads/main.zip", "condacolab"],
-        "pip_task.log"
-        )
+        [
+            f"{prefix}/bin/python",
+            "-m",
+            "pip",
+            "-q",
+            "install",
+            "-U",
+            "https://github.com/googlecolab/colabtools/archive/refs/heads/main.zip",
+            "condacolab",
+        ],
+        "pip_task.log",
+    )
 
     print("📦 Updating enviornment using YAML file...")
 
@@ -308,7 +338,7 @@ def install_from_url(
         pip_args=pip_args,
         extra_conda_args=extra_conda_args,
         conda_exe=f"{prefix}/bin/{conda_exe}",
-        )
+    )
 
     env = env or {}
     bin_path = f"{prefix}/bin"
@@ -357,7 +387,6 @@ def install_mambaforge(
     environment_file: str = None,
     extra_conda_args: Iterable[str] = (),
     pip_args: Iterable[str] = (),
-
 ):
     """
     Install Mambaforge, built for Python 3.7.
@@ -390,7 +419,7 @@ def install_mambaforge(
     installer_url = r"https://github.com/jaimergp/miniforge/releases/latest/download/Mambaforge-colab-Linux-x86_64.sh"
     install_from_url(
         installer_url,
-        prefix=prefix, 
+        prefix=prefix,
         env=env,
         run_checks=run_checks,
         restart_kernel=restart_kernel,
@@ -400,7 +429,8 @@ def install_mambaforge(
         environment_file=environment_file,
         extra_conda_args=extra_conda_args,
         pip_args=pip_args,
-        )
+    )
+
 
 # Make mambaforge the default
 install = install_mambaforge
@@ -445,8 +475,8 @@ def install_miniforge(
         Change to False to ignore checks and always attempt
         to run the installation.
     restart_kernel
-        Variable to manage the kernel restart during the installation 
-        of condacolab. Set it `False` to stop the kernel from restarting 
+        Variable to manage the kernel restart during the installation
+        of condacolab. Set it `False` to stop the kernel from restarting
         automatically and get a button instead to do it.
     """
     installer_url = r"https://github.com/jaimergp/miniforge/releases/latest/download/Miniforge-colab-Linux-x86_64.sh"
@@ -462,7 +492,7 @@ def install_miniforge(
         environment_file=environment_file,
         extra_conda_args=extra_conda_args,
         pip_args=pip_args,
-        )
+    )
 
 
 def install_miniconda(
@@ -499,11 +529,13 @@ def install_miniconda(
         Change to False to ignore checks and always attempt
         to run the installation.
     restart_kernel
-        Variable to manage the kernel restart during the installation 
-        of condacolab. Set it `False` to stop the kernel from restarting 
+        Variable to manage the kernel restart during the installation
+        of condacolab. Set it `False` to stop the kernel from restarting
         automatically and get a button instead to do it.
     """
-    installer_url = r"https://repo.anaconda.com/miniconda/Miniconda3-py37_4.12.0-Linux-x86_64.sh"
+    installer_url = (
+        r"https://repo.anaconda.com/miniconda/Miniconda3-py37_4.12.0-Linux-x86_64.sh"
+    )
     install_from_url(
         installer_url,
         prefix=prefix,
@@ -554,12 +586,14 @@ def install_anaconda(
         Change to False to ignore checks and always attempt
         to run the installation.
     restart_kernel
-        Variable to manage the kernel restart during the installation 
-        of condacolab. Set it `False` to stop the kernel from restarting 
+        Variable to manage the kernel restart during the installation
+        of condacolab. Set it `False` to stop the kernel from restarting
         automatically and get a button instead to do it.
     """
-    installer_url = r"https://repo.anaconda.com/archive/Anaconda3-2022.05-Linux-x86_64.sh"
-    install_from_url(        
+    installer_url = (
+        r"https://repo.anaconda.com/archive/Anaconda3-2022.05-Linux-x86_64.sh"
+    )
+    install_from_url(
         installer_url,
         prefix=prefix,
         env=env,
@@ -588,15 +622,15 @@ def check(prefix: os.PathLike = PREFIX, verbose: bool = True):
         Print success message if True
     """
     assert find_executable("conda"), "💥💔💥 Conda not found!"
-    assert all(
-        not path.startswith("/usr/local/") for path in sys.path
-    ), f"💥💔💥 PYTHONPATH include system locations: {[path for path in sys.path if path.startswith('/usr/local')]}!"
-    assert (
-        f"{prefix}/bin" in os.environ["PATH"]
-    ), f"💥💔💥 PATH was not patched! Value: {os.environ['PATH']}"
-    assert (
-        prefix == os.environ.get("CONDA_PREFIX")
-    ), f"💥💔💥 CONDA_PREFIX value: {os.environ.get('CONDA_PREFIX', '<not set>')} does not match conda installation location {prefix}!"
+    assert all(not path.startswith("/usr/local/") for path in sys.path), (
+        f"💥💔💥 PYTHONPATH include system locations: {[path for path in sys.path if path.startswith('/usr/local')]}!"
+    )
+    assert f"{prefix}/bin" in os.environ["PATH"], (
+        f"💥💔💥 PATH was not patched! Value: {os.environ['PATH']}"
+    )
+    assert prefix == os.environ.get("CONDA_PREFIX"), (
+        f"💥💔💥 CONDA_PREFIX value: {os.environ.get('CONDA_PREFIX', '<not set>')} does not match conda installation location {prefix}!"
+    )
 
     if verbose:
         print("✨🍰✨ Everything looks OK!")
