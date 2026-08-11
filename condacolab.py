@@ -21,25 +21,12 @@ from subprocess import check_output, run, PIPE, STDOUT
 from textwrap import dedent
 from typing import Dict, AnyStr, Iterable
 from urllib.request import urlopen
-from urllib.error import HTTPError
+from distutils.spawn import find_executable
 
+import ipywidgets as widgets
 from IPython.display import display
 from IPython import get_ipython
 
-try:
-    from ruamel.yaml import YAML
-    from ruamel.yaml.comments import CommentedMap
-except ImportError as e:
-    raise RuntimeError(
-        "Could not find ruamel.yaml, plese install using `!pip install ruamel.yaml`!"
-    ) from e
-
-try:
-    import ipywidgets as widgets
-
-    HAS_IPYWIDGETS = True
-except ImportError:
-    HAS_IPYWIDGETS = False
 
 try:
     import google.colab
@@ -57,11 +44,10 @@ yaml = YAML()
 
 PREFIX = "/opt/conda"
 
-if HAS_IPYWIDGETS:
-    restart_kernel_button = widgets.Button(description="Restart kernel now...")
-    restart_button_output = widgets.Output(layout={"border": "1px solid black"})
-else:
-    restart_kernel_button = restart_button_output = None
+
+restart_kernel_button = widgets.Button(description="Restart kernel now...")
+restart_button_output = widgets.Output(layout={"border": "1px solid black"})
+
 
 
 def _on_button_clicked(b):
@@ -270,7 +256,7 @@ def install_from_url(
     with urlopen(installer_url) as response, open(installer_fn, "wb") as out:
         shutil.copyfileobj(response, out)
 
-    condacolab_task = _run_subprocess(
+    _run_subprocess(
         ["bash", installer_fn, "-bfp", str(prefix)],
         "condacolab_install.log",
     )
@@ -313,7 +299,7 @@ def install_from_url(
             "conda_task.log",
         )
 
-    pip_task = _run_subprocess(
+    _run_subprocess(
         [
             f"{prefix}/bin/python",
             "-m",
@@ -327,7 +313,7 @@ def install_from_url(
         "pip_task.log",
     )
 
-    print("📦 Updating enviornment using YAML file...")
+    print("📦 Updating environment using YAML file...")
 
     _update_environment(
         prefix=prefix,
@@ -367,73 +353,19 @@ def install_from_url(
         print("🔁 Restarting kernel...")
         get_ipython().kernel.do_shutdown(True)
 
-    elif HAS_IPYWIDGETS:
+    else:
         print("🔁 Please restart kernel...")
         restart_kernel_button.on_click(_on_button_clicked)
         display(restart_kernel_button, restart_button_output)
 
-    else:
-        print("🔁 Please restart kernel by clicking on Runtime > Restart runtime.")
 
-
-def install_mambaforge(
-    prefix: os.PathLike = PREFIX,
-    env: Dict[AnyStr, AnyStr] = None,
-    run_checks: bool = True,
-    restart_kernel: bool = True,
-    specs: Iterable[str] = (),
-    python_version: str = None,
-    channels: Iterable[str] = (),
-    environment_file: str = None,
-    extra_conda_args: Iterable[str] = (),
-    pip_args: Iterable[str] = (),
-):
-    """
-    Install Mambaforge, built for Python 3.7.
-    Mambaforge consists of a Miniconda-like distribution optimized
-    and preconfigured for conda-forge packages, and includes ``mamba``,
-    a faster ``conda`` implementation.
-    Unlike the official Miniconda, this is built with the latest ``conda``.
-    Parameters
-    ----------
-    prefix
-        Target location for the installation
-    env
-        Environment variables to inject in the kernel restart.
-        We *need* to inject ``LD_LIBRARY_PATH`` so ``{PREFIX}/lib``
-        is first, but you can also add more if you need it. Take
-        into account that no quote handling is done, so you need
-        to add those yourself in the raw string. They will
-        end up added to a line like ``exec env VAR=VALUE python3...``.
-        For example, a value with spaces should be passed as::
-            env={"VAR": '"a value with spaces"'}
-    run_checks
-        Run checks to see if installation was run previously.
-        Change to False to ignore checks and always attempt
-        to run the installation.
-    restart_kernel
-        Variable to manage the kernel restart during the installation
-        of condacolab. Set it `False` to stop the kernel from restarting
-        automatically and get a button instead to do it.
-    """
-    installer_url = r"https://github.com/jaimergp/miniforge/releases/latest/download/Mambaforge-colab-Linux-x86_64.sh"
-    install_from_url(
-        installer_url,
-        prefix=prefix,
-        env=env,
-        run_checks=run_checks,
-        restart_kernel=restart_kernel,
-        specs=specs,
-        python_version=python_version,
-        channels=channels,
-        environment_file=environment_file,
-        extra_conda_args=extra_conda_args,
-        pip_args=pip_args,
+def install_mambaforge(*args, **kwargs):
+    print(
+        "Mambaforge has been superseded by Miniforge.",
+        "Use `install_miniforge()` to remove this warning.",
+        file=sys.stderr,
     )
-
-
-# Make mambaforge the default
-install = install_mambaforge
+    return install_miniforge(*args, **kwargs)
 
 
 def install_miniforge(
@@ -493,6 +425,10 @@ def install_miniforge(
         extra_conda_args=extra_conda_args,
         pip_args=pip_args,
     )
+
+
+# Make miniforge the default
+install = install_miniforge
 
 
 def install_miniconda(
@@ -622,6 +558,12 @@ def check(prefix: os.PathLike = PREFIX, verbose: bool = True):
         Print success message if True
     """
     assert find_executable("conda"), "💥💔💥 Conda not found!"
+
+    pymaj, pymin = sys.version_info[:2]
+    sitepackages = f"{prefix}/lib/python{pymaj}.{pymin}/site-packages"
+    assert sitepackages in sys.path, (
+        f"💥💔💥 PYTHONPATH was not patched! Value: {sys.path}"
+    )
     assert all(not path.startswith("/usr/local/") for path in sys.path), (
         f"💥💔💥 PYTHONPATH include system locations: {[path for path in sys.path if path.startswith('/usr/local')]}!"
     )
