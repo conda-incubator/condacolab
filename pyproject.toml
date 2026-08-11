@@ -9,7 +9,10 @@ homepage = "https://github.com/jaimergp/condacolab"
 repository = "https://github.com/jaimergp/condacolab"
 
 [tool.poetry.dependencies]
-python = "^3.7"
+python = "^3.12"
+"ruamel.yaml" = ">=0.19.1,<0.20"
+ipython = ">=7"
+ipywidgets = "^7.7"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
