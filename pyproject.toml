@@ -1,16 +1,19 @@
-[tool.poetry]
+[build-system]
+build-backend = "hatchling.build"
+requires = ["hatchling >=1.12.2"]
+
+[project]
 name = "condacolab"
 version = "0.1.12"
 description = "Install Conda and friends on Google Colab, easily"
 readme = "README.md"
-authors = ["Jaime Rodríguez-Guerra <jaimergp@users.noreply.github.com>"]
 license = "MIT"
-homepage = "https://github.com/conda-incubator/condacolab"
+requires-python = "==3.12.*"
+
+[[project.authors]]
+name = "Jaime Rodríguez-Guerra"
+email = "jaimergp@users.noreply.github.com"
+
+[project.urls]
 repository = "https://github.com/conda-incubator/condacolab"
-
-[tool.poetry.dependencies]
-python = "^3.12"
-
-[build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
+homepage = "https://github.com/conda-incubator/condacolab"
