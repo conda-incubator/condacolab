@@ -12,6 +12,7 @@ For more details, check the docstrings for ``install_from_url()``.
 
 import json
 import os
+import shlex
 import sys
 import shutil
 from datetime import datetime, timedelta
@@ -20,13 +21,13 @@ from pathlib import Path
 from subprocess import check_output, run, PIPE, STDOUT
 from textwrap import dedent
 from typing import Dict, AnyStr, Iterable
-from urllib.request import urlopen
-from distutils.spawn import find_executable
+from urllib.request import HTTPError, urlopen
+
 
 import ipywidgets as widgets
 from IPython.display import display
 from IPython import get_ipython
-
+from ruamel.yaml import YAML, CommentedMap
 
 try:
     import google.colab
@@ -47,6 +48,7 @@ PREFIX = "/opt/conda"
 
 restart_kernel_button = widgets.Button(description="Restart kernel now...")
 restart_button_output = widgets.Output(layout={"border": "1px solid black"})
+
 
 
 
@@ -203,6 +205,7 @@ def install_from_url(
     installer_url: AnyStr,
     prefix: os.PathLike = PREFIX,
     env: Dict[AnyStr, AnyStr] = None,
+    pre_conda: str = None,
     run_checks: bool = True,
     restart_kernel: bool = True,
     environment_file: str = None,
@@ -235,6 +238,9 @@ def install_from_url(
         For example, a value with spaces should be passed as::
 
             env={"VAR": '"a value with spaces"'}
+    pre_conda
+        Shell script to run before activating the conda base environment.
+        Accepts a file path or a string with the contents.
     run_checks
         Run checks to see if installation was run previously.
         Change to False to ignore checks and always attempt
@@ -328,6 +334,19 @@ def install_from_url(
 
     env = env or {}
     bin_path = f"{prefix}/bin"
+    pre_conda_contents = ""
+
+    if env:
+        pre_conda_contents = "".join(
+            [f'export {key}="{shlex.quote(value)}"\n' for key, value in env.items()]
+        )
+
+    if pre_conda:
+        if os.path.isfile(pre_conda):
+            with open(pre_conda, "r") as f:
+                pre_conda_contents += f.read()
+        else:
+            pre_conda_contents += str(pre_conda)
 
     if os.path.exists(sys.executable):
         os.rename(sys.executable, f"{sys.executable}.renamed_by_condacolab.bak")
@@ -337,7 +356,8 @@ def install_from_url(
             dedent(
                 f"""
                 #!/bin/bash
-                source {prefix}/etc/profile.d/conda.sh
+                {pre_conda_contents}
+                source "{prefix}/etc/profile.d/conda.sh"
                 conda activate
                 unset PYTHONPATH
                 mv /usr/bin/lsb_release /usr/bin/lsb_release.renamed_by_condacolab.bak
@@ -372,6 +392,7 @@ def install_mambaforge(*args, **kwargs):
 def install_miniforge(
     prefix: os.PathLike = PREFIX,
     env: Dict[AnyStr, AnyStr] = None,
+    pre_conda: str = None,
     run_checks: bool = True,
     restart_kernel: bool = True,
     specs: Iterable[str] = (),
@@ -382,9 +403,9 @@ def install_miniforge(
     pip_args: Iterable[str] = (),
 ):
     """
-    Install Mambaforge, built for Python 3.7.
+    Install Miniforge, built for Python 3.7.
 
-    Mambaforge consists of a Miniconda-like distribution optimized
+    Miniforge consists of a Miniconda-like distribution optimized
     and preconfigured for conda-forge packages.
 
     Unlike the official Miniconda, this is built with the latest ``conda``.
@@ -403,6 +424,9 @@ def install_miniforge(
         For example, a value with spaces should be passed as::
 
             env={"VAR": '"a value with spaces"'}
+    pre_conda
+        Shell script to run before activating the conda base environment.
+        Accepts a file path or a string with the contents.
     run_checks
         Run checks to see if installation was run previously.
         Change to False to ignore checks and always attempt
@@ -417,6 +441,7 @@ def install_miniforge(
         installer_url,
         prefix=prefix,
         env=env,
+        pre_conda=pre_conda,
         run_checks=run_checks,
         restart_kernel=restart_kernel,
         specs=specs,
@@ -435,6 +460,7 @@ install = install_miniforge
 def install_miniconda(
     prefix: os.PathLike = PREFIX,
     env: Dict[AnyStr, AnyStr] = None,
+    pre_conda: str = None,
     run_checks: bool = True,
     restart_kernel: bool = True,
     specs: Iterable[str] = (),
@@ -461,6 +487,9 @@ def install_miniconda(
         For example, a value with spaces should be passed as::
 
             env={"VAR": '"a value with spaces"'}
+    pre_conda
+        Shell script to run before activating the conda base environment.
+        Accepts a file path or a string with the contents.
     run_checks
         Run checks to see if installation was run previously.
         Change to False to ignore checks and always attempt
@@ -477,6 +506,7 @@ def install_miniconda(
         installer_url,
         prefix=prefix,
         env=env,
+        pre_conda=pre_conda,
         run_checks=run_checks,
         restart_kernel=restart_kernel,
         specs=specs,
@@ -491,6 +521,7 @@ def install_miniconda(
 def install_anaconda(
     prefix: os.PathLike = PREFIX,
     env: Dict[AnyStr, AnyStr] = None,
+    pre_conda: str = None,
     run_checks: bool = True,
     restart_kernel: bool = True,
     specs: Iterable[str] = (),
@@ -518,6 +549,9 @@ def install_anaconda(
         For example, a value with spaces should be passed as::
 
             env={"VAR": '"a value with spaces"'}
+    pre_conda
+        Shell script to run before activating the conda base environment.
+        Accepts a file path or a string with the contents.
     run_checks
         Run checks to see if installation was run previously.
         Change to False to ignore checks and always attempt
@@ -534,6 +568,7 @@ def install_anaconda(
         installer_url,
         prefix=prefix,
         env=env,
+        pre_conda=pre_conda,
         run_checks=run_checks,
         restart_kernel=restart_kernel,
         specs=specs,
