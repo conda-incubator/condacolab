@@ -212,47 +212,14 @@ def install_from_url(
         restart_kernel_button.on_click(_on_button_clicked)
         display(restart_kernel_button, restart_button_output)
 
-def install_mambaforge(
-    prefix: os.PathLike = PREFIX, env: Dict[AnyStr, AnyStr] = None, run_checks: bool = True, restart_kernel: bool = True,
-):
-    """
-    Install Mambaforge, built for Python 3.7.
 
-    Mambaforge consists of a Miniconda-like distribution optimized
-    and preconfigured for conda-forge packages, and includes ``mamba``,
-    a faster ``conda`` implementation.
-
-    Unlike the official Miniconda, this is built with the latest ``conda``.
-
-    Parameters
-    ----------
-    prefix
-        Target location for the installation
-    env
-        Environment variables to inject in the kernel restart.
-        We *need* to inject ``LD_LIBRARY_PATH`` so ``{PREFIX}/lib``
-        is first, but you can also add more if you need it. Take
-        into account that no quote handling is done, so you need
-        to add those yourself in the raw string. They will
-        end up added to a line like ``exec env VAR=VALUE python3...``.
-        For example, a value with spaces should be passed as::
-
-            env={"VAR": '"a value with spaces"'}
-    run_checks
-        Run checks to see if installation was run previously.
-        Change to False to ignore checks and always attempt
-        to run the installation.
-    restart_kernel
-        Variable to manage the kernel restart during the installation
-        of condacolab. Set it `False` to stop the kernel from restarting
-        automatically and get a button instead to do it.
-    """
-    installer_url = r"https://github.com/jaimergp/miniforge/releases/latest/download/Mambaforge-colab-Linux-x86_64.sh"
-    install_from_url(installer_url, prefix=prefix, env=env, run_checks=run_checks, restart_kernel=restart_kernel)
-
-
-# Make mambaforge the default
-install = install_mambaforge
+def install_mambaforge(*args, **kwargs):
+    print(
+        "Mambaforge has been superseded by Miniforge.",
+        "Use `install_miniforge()` to remove this warning.",
+        file=sys.stderr,
+    )
+    return install_miniforge(*args, **kwargs)
 
 
 def install_miniforge(
@@ -291,6 +258,10 @@ def install_miniforge(
     """
     installer_url = r"https://github.com/jaimergp/miniforge/releases/latest/download/Miniforge-colab-Linux-x86_64.sh"
     install_from_url(installer_url, prefix=prefix, env=env, run_checks=run_checks, restart_kernel=restart_kernel)
+
+
+# Make miniforge the default
+install = install_miniforge
 
 
 def install_miniconda(
