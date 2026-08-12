@@ -26,7 +26,7 @@ except ImportError:
 
 __version__ = "0.2.0a"  # Keep in sync with pyproject.toml
 
-CONTENT_DIR = Path("/content")
+PIXI_DIR = Path("/content")
 COLAB_PYTHON_VERSION = ".".join(map(str, sys.version_info[:2]))
 DEBUG = os.environ.get("CONDACOLAB_DEBUG", "") == "1"
 
@@ -71,8 +71,8 @@ def _pixi_toml(
     pypi_dependencies: dict[str, str] | None = None,  # TODO
 ) -> Path:
     # 2. Populate pixi.toml Manifest
-    CONTENT_DIR.mkdir(exist_ok=True, parents=True)
-    pixi_toml_path = CONTENT_DIR / "pixi.toml"
+    PIXI_DIR.mkdir(exist_ok=True, parents=True)
+    pixi_toml_path = PIXI_DIR / "pixi.toml"
 
     pixi_config = dedent(
         f"""\
@@ -122,17 +122,17 @@ def _pixi_toml(
 def _pixi_install() -> None:
     _stream_subprocess(
         [_pixi(), "install"],
-        cwd=CONTENT_DIR,
+        cwd=PIXI_DIR,
     )
     _stream_subprocess(
         [_pixi(), "run", "install-google-colab"],
-        cwd=CONTENT_DIR,
+        cwd=PIXI_DIR,
     )
 
 
 @cache
 def _pixi_python() -> Path:
-    pixi_python_bin = Path(CONTENT_DIR, ".pixi", "envs", "default", "bin", "python")
+    pixi_python_bin = Path(PIXI_DIR, ".pixi", "envs", "default", "bin", "python")
 
     if not os.path.exists(pixi_python_bin):
         raise FileNotFoundError(f"Expected Python binary at {pixi_python_bin}")
@@ -155,7 +155,7 @@ def _post_install(python_version: str = COLAB_PYTHON_VERSION) -> None:
     import colab_kernel_launcher
 
     target_site_packages = os.path.join(
-        CONTENT_DIR,
+        PIXI_DIR,
         ".pixi",
         "envs",
         "default",
