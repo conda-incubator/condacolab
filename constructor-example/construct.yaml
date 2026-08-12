@@ -5,7 +5,7 @@ version: 0.1      # increment if you change the specs, for reproducibility!
 channels:
   - conda-forge
 specs:
-  - python =3.7  # Python MUST be version 3.7
+  - python =3.8  # Python MUST be version 3.8
   - pip
   - conda
   - mamba  # mamba is not needed but recommended
@@ -14,8 +14,8 @@ specs:
   # uncomment the line below to make sure it matches
   # the output of `!echo $CUDA_VERSION` on colab
   # and take only the major.minor components
-  # Right now, Colab uses CUDA 11.1
-  # - cudatoolkit =11.1
+  # Right now, Colab uses CUDA 11.2.2
+  # - cudatoolkit =11.2.2
 
   # Add your dependencies below this line
   # -------------------------------------

@@ -1,0 +1,110 @@
+name: CI
+
+on:
+  # GitHub has started calling new repo's first branch "main" https://github.com/github/renaming
+  # Existing codes likely still have "master" as the primary branch
+  # Both are tracked here to keep legacy and new codes working
+  push:
+    branches:
+      - "0.1.x"
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: true
+
+permissions: {}
+
+jobs:
+  test:
+    name: ${{ matrix.name }}
+    runs-on: ubuntu-latest
+    container:
+      image: ${{ matrix.image }}  # zizmor: ignore[unpinned-images]
+      options: --user root
+    env:
+      PYTHONUNBUFFERED: "1"
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: CPU, Miniforge
+            image: us-docker.pkg.dev/colab-images/public/cpu-runtime:latest
+            installer: miniforge
+          # - name: CPU, Miniconda
+          #   image: us-docker.pkg.dev/colab-images/public/cpu-runtime:latest
+          #   installer: miniconda
+          # - name: CPU, Anaconda
+          #   image: us-docker.pkg.dev/colab-images/public/cpu-runtime:latest
+          #   installer: anaconda
+          - name: GPU, Miniforge
+            image: us-docker.pkg.dev/colab-images/public/runtime:latest
+            installer: miniforge
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Verify Environment Alignment
+        run: |
+          echo "=== Container OS Info ==="
+          cat /etc/os-release
+          echo "=== Container Python Executable ==="
+          which python3
+          python3 --version
+
+      - name: Install condacolab
+        run: |
+          python3 -m pip install .
+
+      - name: Run installation
+        shell: python3 {0}
+        run: |
+          import condacolab
+          condacolab.install_${{ matrix.installer }}(restart_kernel=False)
+
+          # This is done by condacolab on the kernel config
+          # but in CI we need it for a normal Python process
+          import os
+          with open(os.environ["GITHUB_ENV"], "a") as f:
+            f.write(f"CONDACOLABPYTHON={condacolab.PREFIX}/lib/python{condacolab.TARGET_PYTHON}\n")
+            f.write(f"LD_LIBRARY_PATH={condacolab.PREFIX}/lib\n")
+
+      - name: Check installation
+        shell: python3 {0}
+        run: |
+          import os
+          import sys
+          print('Current Python sys.executable:', sys.executable)
+          print("Starting sys.path", *sys.path, sep="\n")
+          for path in (
+            "/usr/lib/python3/dist-packages",
+            os.environ["CONDACOLABPYTHON"] + "/dist-packages",
+            os.environ["CONDACOLABPYTHON"] + "/site-packages",
+          ):
+              if path not in sys.path:
+                sys.path.insert(0, path)
+          print("Patched sys.path", *sys.path, sep="\n")
+          
+          print("Importing: google.colab")
+          import google.colab
+
+          print("Checking: condacolab")
+          import condacolab
+          condacolab.check()
+
+          print("Running: conda info -a")
+          import conda.cli
+          conda.cli.main("info", "-a")
+          print("Running: conda list")
+          conda.cli.main("list")
+
+      - name: Test solver and constraints
+        env:
+          CONDA_QUIET: "1"
+          CONDA_DRY_RUN: "1"
+        run: |
+          set -x
+          conda install python
+          conda install cuda-version
+          conda install openmm
