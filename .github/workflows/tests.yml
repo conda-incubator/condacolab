@@ -48,15 +48,19 @@ jobs:
       - name: Install condacolab
         run: |
           python3 -m pip install .
+          # This is the working directory for Google Colab
+          mkdir -p /content
 
       - name: Run installation
         shell: python3 {0}
+        working-directory: /content
         run: |
           import condacolab
           condacolab.install(restart_kernel=False)
 
       - name: Check installation
         shell: python3 {0}
+        working-directory: /content
         run: |
           import os
           import sys
@@ -70,6 +74,7 @@ jobs:
           import google.colab._kernel
 
       - name: Test solver and constraints
+        working-directory: /content
         env:
           PIXI_NO_INSTALL: "true"
         run: |
