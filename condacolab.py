@@ -153,12 +153,19 @@ def _forward_kernel_python() -> None:
     backup_python = f"{sys.executable}.orig"
     if not os.path.exists(backup_python):
         shutil.move(sys.executable, f"{sys.executable}.orig")
-    try:
-        os.symlink(_pixi_python(), sys.executable)
-        if DEBUG:
-            print("    Symlinked", sys.executable, "to", _pixi_python())
-    except FileExistsError:
-        pass
+    Path(sys.executable).write_text(
+        dedent(
+            f"""\
+            #!/bin/bash
+            # Patched by condacolab. Original file available at '{sys.executable}.orig'
+            eval "$({_pixi()} shell-hook --shell bash)"
+            exec "{_pixi_python()}" "$@"
+            """
+        )
+    )
+    subprocess.check_call(["chmod", "+x", sys.executable])
+    if DEBUG:
+        print("    Forwarded", sys.executable, "to activated", _pixi_python())
 
 
 def _post_install(python_version: str = COLAB_PYTHON_VERSION) -> None:
@@ -240,8 +247,8 @@ install_anaconda = install_from_url = install_miniforge = install_miniconda = ch
 )
 
 __all__ = [
-    "install_from_url",
     "install",
+    "install_from_url",
     "install_miniforge",
     "install_miniconda",
     "install_anaconda",
