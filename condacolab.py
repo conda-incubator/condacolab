@@ -15,6 +15,7 @@ import os
 import shutil
 import subprocess
 import sys
+from datetime import datetime, timedelta
 from pathlib import Path
 from functools import cache
 from textwrap import dedent
@@ -210,6 +211,7 @@ def install(
     restart_kernel
         Whether to issue an automated kernel restart or ask the user to do it.
     """
+    t0 = datetime.now()
     print("📝 Writing pixi.toml...")
     _pixi_toml(python_version=python_version)
     print("📦 Installing...")
@@ -217,6 +219,9 @@ def install(
     print("✨ Last touches...")
     _post_install(python_version=python_version)
     _forward_kernel_python()
+    print(
+        "⏲ Done in", timedelta(seconds=round((datetime.now() - t0).total_seconds(), 0))
+    )
     if restart_kernel:
         print("✅ Done! Restarting kernel...")
         _restart_kernel()

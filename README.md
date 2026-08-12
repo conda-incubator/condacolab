@@ -4,7 +4,7 @@
 [![Downloads](https://pepy.tech/badge/condacolab/month)](https://pypi.org/project/condacolab)
 [![Downloads](https://pepy.tech/badge/condacolab)](https://pypi.org/project/condacolab) -->
 
-Install Conda and friends on Google Colab, easily.
+Install conda packages on Google Colab, easily.
 
 ![CondaColab](https://github.com/jaimergp/condacolab/raw/main/condacolab.png)
 
@@ -20,11 +20,8 @@ import condacolab
 condacolab.install()
 ```
 
-After the kernel restart, you can optionally add a new cell to check that everything is in place:
-
-```python
-import condacolab
-condacolab.check()
-```
-
 > It is important that you perform the installation first thing in the notebook because it will require a kernel restart, thus resetting the variables set up to that point.
+
+## Example notebook
+
+Check [this example notebook](https://colab.research.google.com/drive/1revmGyR9EFLg-zNj9jcAb9EA8ZHlNPtU?usp=sharing) for more information.
