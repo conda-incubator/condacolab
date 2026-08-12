@@ -8,7 +8,7 @@ description = "Install Conda and friends on Google Colab, easily"
 license = "MIT"
 name = "condacolab"
 readme = "README.md"
-requires-python = "==3.12.*"
+requires-python = ">=3.10"
 version = "0.2.0a"
 
 [[project.authors]]
