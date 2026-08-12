@@ -74,6 +74,13 @@ def _pixi_toml(
     PIXI_DIR.mkdir(exist_ok=True, parents=True)
     pixi_toml_path = PIXI_DIR / "pixi.toml"
 
+    cuda_version = os.environ.get("CUDA_VERSION", "*.*.*").split(".")[:2]
+    if cuda_version[0] == "11":
+        cuda_pin = f'cudatoolkit = "{cuda_version[0]}.{cuda_version[1]}.*"'
+    else:
+        # Assume forward compatibility on major version
+        cuda_pin = f'cuda-version = "{cuda_version[0]}.*"'
+
     pixi_config = dedent(
         f"""\
         [workspace]
@@ -99,6 +106,9 @@ def _pixi_toml(
         portpicker = "1.*"
         requests = "2.*"
         tornado = "6.*"
+
+        [constraints]
+        {cuda_pin}
 
         [pypi-dependencies]
         ipython = "==7.*"
