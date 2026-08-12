@@ -111,13 +111,13 @@ def _pixi_toml(
         [constraints]
         {cuda_pin}
 
-        [pypi-dependencies]
-        ipython = "==7.*"
-        ipykernel = "==6.*"
-        ipyparallel = "==8.*"
-        jupyter-server = "==2.*"
-        anywidget = "*"
-        ipython_genutils = "*"
+        # [pypi-dependencies]
+        # ipython = "==7.*"
+        # ipykernel = "==6.*"
+        # ipyparallel = "==8.*"
+        # jupyter-server = "==2.*"
+        # anywidget = "*"
+        # ipython_genutils = "*"
 
         # Can't be a pypi-dependencies entry because its requirements are way too strict
         [tasks]
