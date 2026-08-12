@@ -10,13 +10,15 @@ Usage:
 For more details, check the docstrings for ``install_from_url()``.
 """
 
+from __future__ import annotations
+
 import json
+import hashlib
 import os
 import shlex
 import sys
 import shutil
 from datetime import datetime, timedelta
-from distutils.spawn import find_executable
 from pathlib import Path
 from subprocess import check_output, run, PIPE, STDOUT
 from textwrap import dedent
@@ -30,26 +32,18 @@ from IPython import get_ipython
 from ruamel.yaml import YAML, CommentedMap
 
 try:
-    import google.colab
+    import google.colab  # noqa
 except ImportError:
     raise RuntimeError("This module must ONLY run as part of a Colab notebook!")
 
-
-__version__ = "0.1.4"
-__author__ = (
-    "Jaime Rodríguez-Guerra <jaimergp@users.noreply.github.com>, "
-    "Surbhi Sharma <ssurbhi560@users.noreply.github.com>"
-)
-
-yaml = YAML()
+__version__ = "0.1.12"  # Keep in sync with pyproject.toml
 
 PREFIX = "/opt/conda"
+TARGET_PYTHON = "3.12"  # Keep in sync with pyproject.toml
 
-
+yaml = YAML()
 restart_kernel_button = widgets.Button(description="Restart kernel now...")
 restart_button_output = widgets.Output(layout={"border": "1px solid black"})
-
-
 
 
 def _on_button_clicked(b):
@@ -59,7 +53,7 @@ def _on_button_clicked(b):
         restart_kernel_button.close()
 
 
-def _run_subprocess(command, logs_filename):
+def _run_subprocess(command, logs_filename) -> None:
     """
     Run subprocess then write the logs for that process and raise errors if it fails.
 
@@ -201,6 +195,29 @@ def _update_environment(
     )
 
 
+def _chunked_sha256(path: str | Path, chunksize: int = 1_048_576) -> str:
+    hasher = hashlib.sha256()
+    with open(path, "rb") as f:
+        while chunk := f.read(chunksize):
+            hasher.update(chunk)
+    return hasher.hexdigest()
+
+
+def _check_python() -> None:
+    colab_python = ".".join(map(str, sys.version_info[:2]))
+    assert colab_python == TARGET_PYTHON, (
+        f"💥💔💥 Colab's Python ({colab_python}) does not match expected version: {TARGET_PYTHON}. "
+        "Consider running a different Runtime Version to make them match. More information: "
+        "https://github.com/conda-incubator/condacolab/issues/79"
+    )
+
+
+def _colab_kernel_launcher() -> str:
+    import colab_kernel_launcher
+
+    return colab_kernel_launcher.__file__
+
+
 def install_from_url(
     installer_url: AnyStr,
     prefix: os.PathLike = PREFIX,
@@ -214,7 +231,8 @@ def install_from_url(
     channels: Iterable[str] = (),
     pip_args: Iterable[str] = (),
     extra_conda_args: Iterable[str] = (),
-):
+    sha256: str | None = None,
+) -> None:
     """
     Download and run a constructor-like installer, patching
     the necessary bits so it works on Colab right away.
@@ -249,6 +267,8 @@ def install_from_url(
         Variable to manage the kernel restart during the installation
         of condacolab. Set it `False` to stop the kernel from restarting
         automatically and get a button instead to do it.
+    sha256
+        Expected SHA256 checksum of the installer. Optional.
     """
     if run_checks:
         try:  # run checks to see if it this was run already
@@ -256,25 +276,44 @@ def install_from_url(
         except AssertionError:
             pass  # just install
 
+    _check_python()
+
     t0 = datetime.now()
     print(f"⏬ Downloading {installer_url}...")
     installer_fn = "__installer__.sh"
     with urlopen(installer_url) as response, open(installer_fn, "wb") as out:
         shutil.copyfileobj(response, out)
 
+    if sha256 is not None:
+        digest = _chunked_sha256(installer_fn)
+        assert digest == sha256, (
+            f"💥💔💥 Checksum failed! Expected {sha256}, got {digest}"
+        )
+
+    print("📦 Installing...")
     _run_subprocess(
         ["bash", installer_fn, "-bfp", str(prefix)],
         "condacolab_install.log",
     )
+    os.unlink(installer_fn)
 
     print("📌 Adjusting configuration...")
-    cuda_version = ".".join(os.environ.get("CUDA_VERSION", "*.*.*").split(".")[:2])
+    cuda_version = os.environ.get("CUDA_VERSION", "*.*.*").split(".")[:2]
     prefix = Path(prefix)
     condameta = prefix / "conda-meta"
     condameta.mkdir(parents=True, exist_ok=True)
 
+    if cuda_version[0] == "11":
+        cuda_pin = f"cudatoolkit {cuda_version[0]}.{cuda_version[1]}.*"
+    else:
+        # Assume forward compatibility on major version
+        cuda_pin = f"cuda-version {cuda_version[0]}.*"
+
+    pymaj, pymin = sys.version_info[:2]
     with open(condameta / "pinned", "a") as f:
-        f.write(f"cudatoolkit {cuda_version}.*\n")
+        f.write(f"python {pymaj}.{pymin}.*\n")
+        f.write(f"python_abi {pymaj}.{pymin}.* *cp{pymaj}{pymin}*\n")
+        f.write(f"{cuda_pin}\n")
 
     with open(prefix / ".condarc", "a") as f:
         f.write("always_yes: true\n")
@@ -361,6 +400,7 @@ def install_from_url(
                 conda activate
                 unset PYTHONPATH
                 mv /usr/bin/lsb_release /usr/bin/lsb_release.renamed_by_condacolab.bak
+                cp "{_colab_kernel_launcher()}" "{prefix}/lib/python{pymaj}.{pymin}/site-packages"
                 exec {bin_path}/python $@
                 """
             ).lstrip()
@@ -373,214 +413,13 @@ def install_from_url(
     if restart_kernel:
         print("🔁 Restarting kernel...")
         get_ipython().kernel.do_shutdown(True)
-
     else:
         print("🔁 Please restart kernel...")
         restart_kernel_button.on_click(_on_button_clicked)
         display(restart_kernel_button, restart_button_output)
 
 
-def install_mambaforge(*args, **kwargs):
-    print(
-        "Mambaforge has been superseded by Miniforge.",
-        "Use `install_miniforge()` to remove this warning.",
-        file=sys.stderr,
-    )
-    return install_miniforge(*args, **kwargs)
-
-
-def install_miniforge(
-    prefix: os.PathLike = PREFIX,
-    env: Dict[AnyStr, AnyStr] = None,
-    pre_conda: str = None,
-    run_checks: bool = True,
-    restart_kernel: bool = True,
-    specs: Iterable[str] = (),
-    python_version: str = None,
-    channels: Iterable[str] = (),
-    environment_file: str = None,
-    extra_conda_args: Iterable[str] = (),
-    pip_args: Iterable[str] = (),
-):
-    """
-    Install Miniforge, built for Python 3.7.
-
-    Miniforge consists of a Miniconda-like distribution optimized
-    and preconfigured for conda-forge packages.
-
-    Unlike the official Miniconda, this is built with the latest ``conda``.
-
-    Parameters
-    ----------
-    prefix
-        Target location for the installation
-    env
-        Environment variables to inject in the kernel restart.
-        We *need* to inject ``LD_LIBRARY_PATH`` so ``{PREFIX}/lib``
-        is first, but you can also add more if you need it. Take
-        into account that no quote handling is done, so you need
-        to add those yourself in the raw string. They will
-        end up added to a line like ``exec env VAR=VALUE python3...``.
-        For example, a value with spaces should be passed as::
-
-            env={"VAR": '"a value with spaces"'}
-    pre_conda
-        Shell script to run before activating the conda base environment.
-        Accepts a file path or a string with the contents.
-    run_checks
-        Run checks to see if installation was run previously.
-        Change to False to ignore checks and always attempt
-        to run the installation.
-    restart_kernel
-        Variable to manage the kernel restart during the installation
-        of condacolab. Set it `False` to stop the kernel from restarting
-        automatically and get a button instead to do it.
-    """
-    installer_url = r"https://github.com/jaimergp/miniforge/releases/latest/download/Miniforge-colab-Linux-x86_64.sh"
-    install_from_url(
-        installer_url,
-        prefix=prefix,
-        env=env,
-        pre_conda=pre_conda,
-        run_checks=run_checks,
-        restart_kernel=restart_kernel,
-        specs=specs,
-        python_version=python_version,
-        channels=channels,
-        environment_file=environment_file,
-        extra_conda_args=extra_conda_args,
-        pip_args=pip_args,
-    )
-
-
-# Make miniforge the default
-install = install_miniforge
-
-
-def install_miniconda(
-    prefix: os.PathLike = PREFIX,
-    env: Dict[AnyStr, AnyStr] = None,
-    pre_conda: str = None,
-    run_checks: bool = True,
-    restart_kernel: bool = True,
-    specs: Iterable[str] = (),
-    python_version: str = None,
-    channels: Iterable[str] = (),
-    environment_file: str = None,
-    extra_conda_args: Iterable[str] = (),
-    pip_args: Iterable[str] = (),
-):
-    """
-    Install Miniconda 4.12.0 for Python 3.7.
-
-    Parameters
-    ----------
-    prefix
-        Target location for the installation
-    env
-        Environment variables to inject in the kernel restart.
-        We *need* to inject ``LD_LIBRARY_PATH`` so ``{PREFIX}/lib``
-        is first, but you can also add more if you need it. Take
-        into account that no quote handling is done, so you need
-        to add those yourself in the raw string. They will
-        end up added to a line like ``exec env VAR=VALUE python3...``.
-        For example, a value with spaces should be passed as::
-
-            env={"VAR": '"a value with spaces"'}
-    pre_conda
-        Shell script to run before activating the conda base environment.
-        Accepts a file path or a string with the contents.
-    run_checks
-        Run checks to see if installation was run previously.
-        Change to False to ignore checks and always attempt
-        to run the installation.
-    restart_kernel
-        Variable to manage the kernel restart during the installation
-        of condacolab. Set it `False` to stop the kernel from restarting
-        automatically and get a button instead to do it.
-    """
-    installer_url = (
-        r"https://repo.anaconda.com/miniconda/Miniconda3-py37_4.12.0-Linux-x86_64.sh"
-    )
-    install_from_url(
-        installer_url,
-        prefix=prefix,
-        env=env,
-        pre_conda=pre_conda,
-        run_checks=run_checks,
-        restart_kernel=restart_kernel,
-        specs=specs,
-        python_version=python_version,
-        channels=channels,
-        environment_file=environment_file,
-        extra_conda_args=extra_conda_args,
-        pip_args=pip_args,
-    )
-
-
-def install_anaconda(
-    prefix: os.PathLike = PREFIX,
-    env: Dict[AnyStr, AnyStr] = None,
-    pre_conda: str = None,
-    run_checks: bool = True,
-    restart_kernel: bool = True,
-    specs: Iterable[str] = (),
-    python_version: str = None,
-    channels: Iterable[str] = (),
-    environment_file: str = None,
-    extra_conda_args: Iterable[str] = (),
-    pip_args: Iterable[str] = (),
-):
-    """
-    Install Anaconda 2022.05, the latest version built
-    for Python 3.7 at the time of update.
-
-    Parameters
-    ----------
-    prefix
-        Target location for the installation
-    env
-        Environment variables to inject in the kernel restart.
-        We *need* to inject ``LD_LIBRARY_PATH`` so ``{PREFIX}/lib``
-        is first, but you can also add more if you need it. Take
-        into account that no quote handling is done, so you need
-        to add those yourself in the raw string. They will
-        end up added to a line like ``exec env VAR=VALUE python3...``.
-        For example, a value with spaces should be passed as::
-
-            env={"VAR": '"a value with spaces"'}
-    pre_conda
-        Shell script to run before activating the conda base environment.
-        Accepts a file path or a string with the contents.
-    run_checks
-        Run checks to see if installation was run previously.
-        Change to False to ignore checks and always attempt
-        to run the installation.
-    restart_kernel
-        Variable to manage the kernel restart during the installation
-        of condacolab. Set it `False` to stop the kernel from restarting
-        automatically and get a button instead to do it.
-    """
-    installer_url = (
-        r"https://repo.anaconda.com/archive/Anaconda3-2022.05-Linux-x86_64.sh"
-    )
-    install_from_url(
-        installer_url,
-        prefix=prefix,
-        env=env,
-        pre_conda=pre_conda,
-        run_checks=run_checks,
-        restart_kernel=restart_kernel,
-        specs=specs,
-        python_version=python_version,
-        channels=channels,
-        environment_file=environment_file,
-        extra_conda_args=extra_conda_args,
-        pip_args=pip_args,
-    )
-
-
-def check(prefix: os.PathLike = PREFIX, verbose: bool = True):
+def check(prefix: str | Path = PREFIX, verbose: bool = True) -> None:
     """
     Run some basic checks to ensure that ``conda`` has been installed
     correctly
@@ -593,7 +432,7 @@ def check(prefix: os.PathLike = PREFIX, verbose: bool = True):
     verbose
         Print success message if True
     """
-    assert find_executable("conda"), "💥💔💥 Conda not found!"
+    assert shutil.which("conda"), "💥💔💥 Conda not found!"
 
     pymaj, pymin = sys.version_info[:2]
     sitepackages = f"{prefix}/lib/python{pymaj}.{pymin}/site-packages"
@@ -610,17 +449,102 @@ def check(prefix: os.PathLike = PREFIX, verbose: bool = True):
         f"💥💔💥 CONDA_PREFIX value: {os.environ.get('CONDA_PREFIX', '<not set>')} does not match conda installation location {prefix}!"
     )
 
+    assert f"{pymaj}.{pymin}" == TARGET_PYTHON, (
+        f"💥💔💥 Python version {pymaj}.{pymin} does not match expected value: {TARGET_PYTHON}"
+    )
+    assert sitepackages in sys.path, (
+        f"💥💔💥 PYTHONPATH was not patched! Value: {sys.path}"
+    )
+    assert f"{prefix}/bin" in os.environ["PATH"], (
+        f"💥💔💥 PATH was not patched! Value: {os.environ['PATH']}"
+    )
+    assert f"{prefix}/lib" in os.environ["LD_LIBRARY_PATH"], (
+        f"💥💔💥 LD_LIBRARY_PATH was not patched! Value: {os.environ['LD_LIBRARY_PATH']}"
+    )
     if verbose:
         print("✨🍰✨ Everything looks OK!")
 
 
+def install_miniforge(
+    prefix: str | Path = PREFIX,
+    env: Dict[AnyStr, AnyStr] = None,
+    pre_conda: str = None,
+    run_checks: bool = True,
+    restart_kernel: bool = True,
+    environment_file: str = None,
+    python_version: str = None,
+    specs: Iterable[str] = (),
+    channels: Iterable[str] = (),
+    pip_args: Iterable[str] = (),
+    extra_conda_args: Iterable[str] = (),
+) -> None:
+    """
+    Install Miniforge 25.11.1, built for Python 3.12.
+
+    Miniforge consists of a Miniconda-like distribution optimized
+    and preconfigured for conda-forge packages.
+
+    Parameters
+    ----------
+    prefix
+        Target location for the installation
+    env
+        Environment variables to inject in the kernel restart.
+        We *need* to inject ``LD_LIBRARY_PATH`` so ``{PREFIX}/lib``
+        is first, but you can also add more if you need it. Take
+        into account that no quote handling is done, so you need
+        to add those yourself in the raw string. They will
+        end up added to a line like ``exec env VAR=VALUE python3...``.
+        For example, a value with spaces should be passed as::
+
+            env={"VAR": '"a value with spaces"'}
+    run_checks
+        Run checks to see if installation was run previously.
+        Change to False to ignore checks and always attempt
+        to run the installation.
+    """
+    installer_url = (
+        "https://github.com/conda-forge/miniforge/releases/download/"
+        "25.11.0-1/Miniforge3-25.11.0-1-Linux-x86_64.sh"
+    )
+    checksum = "be1bad9d4e67a8753eb76fb4940e9a08036786675c7adf060627e55791bf110d"
+    install_from_url(
+        installer_url,
+        prefix=prefix,
+        env=env,
+        pre_conda=pre_conda,
+        run_checks=run_checks,
+        restart_kernel=restart_kernel,
+        environment_file=environment_file,
+        python_version=python_version,
+        specs=specs,
+        channels=channels,
+        pip_args=pip_args,
+        extra_conda_args=extra_conda_args,
+        sha256=checksum,
+    )
+
+
+# Make miniforge the default
+install = install_miniforge
+
+
+def install_miniconda(*args, **kwargs):
+    print(
+        "This function has been deprecated. If you still need it, install condacolab==0.1",
+        file=sys.stderr,
+    )
+
+
+install_anaconda = install_miniconda
+
 __all__ = [
-    "install",
     "install_from_url",
-    "install_mambaforge",
+    "install",
     "install_miniforge",
     "install_miniconda",
     "install_anaconda",
     "check",
     "PREFIX",
+    "TARGET_PYTHON",
 ]
