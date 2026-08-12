@@ -71,7 +71,7 @@ jobs:
 
       - name: Test solver and constraints
         env:
-          PIXI_NO_INSTALL: "1"
+          PIXI_NO_INSTALL: "true"
         run: |
           set -x
           pixi add python
