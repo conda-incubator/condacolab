@@ -1,0 +1,43 @@
+# disable autofixing PRs, commenting "pre-commit.ci autofix" on a pull request triggers a autofix
+ci:
+  autofix_prs: false
+repos:
+  # generic verification and formatting
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      # standard end of line/end of file cleanup
+      - id: mixed-line-ending
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+      # ensure syntaxes are valid
+      - id: check-toml
+      - id: check-yaml
+      # catch git merge/rebase problems
+      - id: check-merge-conflict
+      # sort requirements files
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.15.22
+    hooks:
+      # lint & attempt to correct failures (e.g. pyupgrade)
+      - id: ruff-check
+        args: [--fix]
+      # compatible replacement for black
+      - id: ruff-format
+  - repo: https://github.com/macisamuele/language-formatters-pre-commit-hooks
+    rev: v2.16.0
+    hooks:
+      - id: pretty-format-toml
+        args: [--autofix, --trailing-commas]
+  - repo: https://github.com/python-jsonschema/check-jsonschema
+    rev: 0.37.4
+    hooks:
+      # verify github syntaxes
+      - id: check-github-workflows
+      - id: check-dependabot
+  - repo: meta
+    # see https://pre-commit.com/#meta-hooks
+    hooks:
+      - id: check-hooks-apply
+      - id: check-useless-excludes
