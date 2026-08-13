@@ -1,11 +1,9 @@
 name: CI
 
 on:
-  # GitHub has started calling new repo's first branch "main" https://github.com/github/renaming
-  # Existing codes likely still have "master" as the primary branch
-  # Both are tracked here to keep legacy and new codes working
   push:
     branches:
+      - "main"
       - "0.1.x"
   pull_request:
 
@@ -19,11 +17,6 @@ jobs:
   test:
     name: ${{ matrix.name }}
     runs-on: ubuntu-latest
-    container:
-      image: ${{ matrix.image }}  # zizmor: ignore[unpinned-images]
-      options: --user root
-    env:
-      PYTHONUNBUFFERED: "1"
     strategy:
       fail-fast: false
       matrix:
@@ -36,49 +29,50 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-
-      - name: Verify Environment Alignment
+      - name: Install & test
         run: |
-          echo "=== Container OS Info ==="
-          cat /etc/os-release
-          echo "=== Container Python Executable ==="
-          which python3
-          python3 --version
+          PYTHON_VERSIONS=("3.10" "3.11" "3.12" "3.13" "3.14")
+          IMAGE="${{ matrix.image }}"
 
-      - name: Install condacolab
-        run: |
-          python3 -m pip install .
-          # This is the working directory for Google Colab
-          mkdir -p /content
+          for PY in "${PYTHON_VERSIONS[@]}"; do
+            echo "::group::Testing Python $PY for ${{ matrix.name }}"
+            echo "=================================================="
+            echo " Testing Python $PY for ${{ matrix.name }}"
+            echo "=================================================="
 
-      - name: Run installation
-        shell: python3 {0}
-        working-directory: /content
-        run: |
-          import condacolab
-          condacolab.install(restart_kernel=False)
+            # Clean generated files between runs
+            git clean -fdx || true
 
-      - name: Check installation
-        shell: python3 {0}
-        working-directory: /content
-        run: |
-          import os
-          import sys
-          print("sys.executable:", sys.executable)
-          print("sys.path", *sys.path, sep="\n")
-          
-          print("Checking colab_kernel_launcher")
-          import colab_kernel_launcher
+            docker run --rm \
+              --user root \
+              -v "${{ github.workspace }}:/content" \
+              -w /content \
+              -e PYTHONUNBUFFERED="1" \
+              -e PIXI_NO_INSTALL="true" \
+              "$IMAGE" \
+              bash -exc "
+                echo '=== Container OS Info ==='
+                cat /etc/os-release
 
-          print("Checking google.colab._kernel")
-          import google.colab._kernel
+                echo '=== Container Python Executable ==='
+                which python3
+                python3 --version
 
-      - name: Test solver and constraints
-        working-directory: /content
-        env:
-          PIXI_NO_INSTALL: "true"
-        run: |
-          set -x
-          pixi add python
-          pixi add cuda-version
-          pixi add openmm
+                echo '=== Install condacolab ==='
+                python3 -m pip install .
+
+                echo '=== Run installation ==='
+                python3 -c 'import condacolab; condacolab.install(restart_kernel=False)'
+
+                echo '=== Check installation ==='
+                python3 -c 'import sys; print(\"sys.executable:\", sys.executable); print(\"sys.path\", *sys.path, sep=\"\n\")'
+                python3 -c 'import colab_kernel_launcher'
+                python3 -c 'import google.colab._kernel'
+
+                echo '=== Test solver and constraints for Python $PY ==='
+                pixi add python=\"$PY\"
+                pixi add cuda-version
+                pixi add openmm
+              "
+            echo "::endgroup::"
+          done
