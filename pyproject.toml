@@ -3,25 +3,18 @@ build-backend = "hatchling.build"
 requires = ["hatchling >=1.12.2"]
 
 [project]
-name = "condacolab"
-version = "0.1.12"
+dependencies = []
 description = "Install Conda and friends on Google Colab, easily"
-readme = "README.md"
 license = "MIT"
-requires-python = "==3.12.*"
-dependencies = [
-    "ruamel.yaml>=0.19.1,<0.20",
-    "ipython>=7",
-    "ipywidgets==7.7.*",
-]
+name = "condacolab"
+readme = "README.md"
+requires-python = ">=3.10"
+version = "0.2.0a"
 
 [[project.authors]]
-name = "Jaime Rodríguez-Guerra"
 email = "jaimergp@users.noreply.github.com"
-[[project.maintainers]]
-name = "Surbhi Sharma"
-email = "ssurbhi560@users.noreply.github.com"
+name = "Jaime Rodríguez-Guerra"
 
 [project.urls]
-repository = "https://github.com/conda-incubator/condacolab"
 homepage = "https://github.com/conda-incubator/condacolab"
+repository = "https://github.com/conda-incubator/condacolab"
