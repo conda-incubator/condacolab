@@ -33,6 +33,18 @@ condacolab.install(python_version="3.14")
 condacolab.install(dependencies={"numpy": ">=2", "scipy": "*"})
 ```
 
-## Example notebook
+## FAQ
 
-Check [this example notebook](https://colab.research.google.com/drive/1revmGyR9EFLg-zNj9jcAb9EA8ZHlNPtU?usp=sharing) for more information.
+### Do you have any examples to get started?
+
+Yes, check [this example notebook](https://colab.research.google.com/drive/1revmGyR9EFLg-zNj9jcAb9EA8ZHlNPtU?usp=sharing) for more information.
+
+### How can I use my `environment.yml` with `condacolab`?
+
+`condacolab` or Pixi do no support them directly, but here's a one-liner workaround you can run once `condacolab.install()` has run:
+
+```
+!pixi exec conda install --file environment.yml --prefix "$CONDA_PREFIX" --yes
+```
+
+The trick is to know that the restarted kernel runs on an activated conda environment, so you can use `$CONDA_PREFIX` to refer to it. Do note that any other `pixi` operations on the environment might undo that operation, so make sure to run this workaround as the last step of the setup.
