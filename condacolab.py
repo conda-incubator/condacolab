@@ -19,6 +19,10 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from functools import cache
 from textwrap import dedent
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
 
 try:
     import google.colab  # noqa
@@ -68,6 +72,7 @@ def _pixi() -> Path:
 
 def _pixi_toml(
     python_version: str = COLAB_PYTHON_VERSION,
+    channels: Iterable[str] = ("conda-forge",),
     dependencies: dict[str, str] | None = None,
     pypi_dependencies: dict[str, str] | None = None,
 ) -> Path:
@@ -87,7 +92,7 @@ def _pixi_toml(
         [workspace]
         name = "colab-pixi-kernel"
         version = "0.1.0"
-        channels = ["conda-forge"]
+        channels = {list(channels)}
         platforms = ["linux-64"]
 
         # These dependencies must be kept more or less in sync with
@@ -205,6 +210,7 @@ def _restart_kernel() -> None:
 
 def install(
     python_version: str = COLAB_PYTHON_VERSION,
+    channels: Iterable[str] = ("conda-forge",),
     dependencies: dict[str, str] | None = None,
     pypi_dependencies: dict[str, str] | None = None,
     restart_kernel: bool = True,
@@ -217,6 +223,8 @@ def install(
     ----------
     python_version
         Defaults to whatever Colab ships. MUST be a string of format `major.minor`.
+    channels
+        Conda channels to install packages form. Defaults to conda-forge.
     dependencies
         Mapping of conda package names to their version constraints. Use "*" as value for no
         constraints.
@@ -225,7 +233,7 @@ def install(
         constraints.
     restart_kernel
         Whether to issue an automated kernel restart or ask the user to do it.
-    
+
     Notes
     -----
     Adding new dependencies (from either conda-forge or PyPI), may cause the resulting
@@ -244,6 +252,7 @@ def install(
     print("📝 Writing pixi.toml...")
     _pixi_toml(
         python_version=python_version,
+        channels=channels,
         dependencies=dependencies,
         pypi_dependencies=pypi_dependencies,
     )
