@@ -51,7 +51,6 @@ jobs:
               -v "${{ github.workspace }}:/content" \
               -w /content \
               -e PYTHONUNBUFFERED="1" \
-              -e PIXI_NO_INSTALL="true" \
               "${{ matrix.image }}" \
               bash -exc "
                 echo '=== Container OS Info ==='
@@ -75,9 +74,9 @@ jobs:
                 python3 -c 'import google.colab._kernel'
 
                 echo '=== Test solver and constraints for Python $PY ==='
-                pixi add python=\"$PY\"
-                pixi add cuda-version
-                pixi add openmm
+                pixi add --no-install python=\"$PY\"
+                pixi add --no-install cuda-version
+                pixi add --no-install openmm
               "
             echo "::endgroup::"
           done
