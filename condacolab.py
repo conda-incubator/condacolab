@@ -15,9 +15,9 @@ import os
 import shutil
 import subprocess
 import sys
-from datetime import datetime, timedelta
-from pathlib import Path
+from datetime import datetime, timedelta, timezone
 from functools import cache
+from pathlib import Path
 from textwrap import dedent
 from typing import TYPE_CHECKING
 
@@ -248,7 +248,7 @@ def install(
     >>> install(dependencies={"numpy": ">=2"})  # Install numpy>=2 too, from conda-forge
     >>> install(pypi_dependencies={"numpy": ">=2"})  # Install numpy>=2, but from PyPI
     """
-    t0 = datetime.now()
+    t0 = datetime.now(tz=timezone.utc)
     print("📝 Writing pixi.toml...")
     _pixi_toml(
         python_version=python_version,
@@ -261,7 +261,8 @@ def install(
     print("✨ Last touches...")
     _post_install(python_version=python_version)
     _forward_kernel_python()
-    print("⏲ Done in", timedelta(seconds=round((datetime.now() - t0).total_seconds(), 0)))
+    taken = timedelta(seconds=round((datetime.now(tz=timezone.utc) - t0).total_seconds(), 0))
+    print("⏲ Done in", taken)
     if restart_kernel:
         print("✅ Done! Restarting kernel...")
         _restart_kernel()
@@ -290,10 +291,10 @@ def deprecated(*args, **kwargs):
 install_anaconda = install_from_url = install_miniforge = install_miniconda = check = deprecated
 
 __all__ = [
-    "install",
-    "install_from_url",
-    "install_miniforge",
-    "install_miniconda",
-    "install_anaconda",
     "check",
+    "install",
+    "install_anaconda",
+    "install_from_url",
+    "install_miniconda",
+    "install_miniforge",
 ]
