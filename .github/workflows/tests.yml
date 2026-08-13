@@ -41,7 +41,7 @@ jobs:
             echo "=================================================="
 
             # Clean generated files between runs
-            git clean -fdx || true
+            git clean -fdx 2>/dev/null || true
 
             docker run --rm \
               --entrypoint "" \
