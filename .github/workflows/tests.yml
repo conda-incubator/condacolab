@@ -63,10 +63,12 @@ jobs:
                 python3 -m pip install .
 
                 echo '=== Run installation ==='
-                python3 -c 'import condacolab; condacolab.install(restart_kernel=False)'
+                python3 -c 'import condacolab; condacolab.install(python_version=\"$PY\", restart_kernel=False)'
 
                 echo '=== Check installation ==='
-                python3 -c 'import sys; print(\"sys.executable:\", sys.executable); print(\"sys.path\", *sys.path, sep=\"\n\")'
+                python3 -c 'import sys; print(\"sys.executable:\", sys.executable)'
+                python3 -c 'import sys; print(\"sys.version:\", sys.version)'
+                python3 -c 'import sys; print(\"sys.path:\", *sys.path, sep=\"\n\")'
                 python3 -c 'import colab_kernel_launcher'
                 python3 -c 'import google.colab._kernel'
 
