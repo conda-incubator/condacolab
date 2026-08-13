@@ -68,8 +68,8 @@ def _pixi() -> Path:
 
 def _pixi_toml(
     python_version: str = COLAB_PYTHON_VERSION,
-    dependencies: dict[str, str] | None = None,  # TODO
-    pypi_dependencies: dict[str, str] | None = None,  # TODO
+    dependencies: dict[str, str] | None = None,
+    pypi_dependencies: dict[str, str] | None = None,
 ) -> Path:
     # 2. Populate pixi.toml Manifest
     PIXI_DIR.mkdir(exist_ok=True, parents=True)
@@ -83,7 +83,7 @@ def _pixi_toml(
         cuda_pin = f'cuda-version = "{cuda_version[0]}.*"'
 
     pixi_config = dedent(
-        f"""\
+        f"""
         [workspace]
         name = "colab-pixi-kernel"
         version = "0.1.0"
@@ -107,6 +107,7 @@ def _pixi_toml(
         portpicker = "1.*"
         requests = "2.*"
         tornado = "6.*"
+        __DEPENDENCIES__
 
         [constraints]
         {cuda_pin}
@@ -118,12 +119,17 @@ def _pixi_toml(
         jupyter-server = "==2.*"
         anywidget = "*"
         ipython_genutils = "*"
+        __PYPY_DEPENDENCIES__
 
         # Can't be a pypi-dependencies entry because its requirements are way too strict
         [tasks]
         install-google-colab = "pip install https://github.com/googlecolab/colabtools/archive/refs/heads/main.zip --no-deps"
         """
     )
+    deps = "\n".join(f'"{k}" = "{v}"' for k, v in (dependencies or {}).items())
+    pypi_deps = "\n".join(f'"{k}" = "{v}"' for k, v in (pypi_dependencies or {}).items())
+    pixi_config = pixi_config.replace("__DEPENDENCIES__", deps)
+    pixi_config = pixi_config.replace("__PYPY_DEPENDENCIES__", pypi_deps)
     pixi_toml_path.write_text(pixi_config)
     if DEBUG:
         print("    Wrote", pixi_toml_path)
@@ -198,7 +204,10 @@ def _restart_kernel() -> None:
 
 
 def install(
-    python_version: str = COLAB_PYTHON_VERSION, restart_kernel: bool = True
+    python_version: str = COLAB_PYTHON_VERSION,
+    dependencies: dict[str, str] | None = None,
+    pypi_dependencies: dict[str, str] | None = None,
+    restart_kernel: bool = True,
 ) -> None:
     """
     Creates a new conda environment with Pixi, including the dependencies
@@ -208,20 +217,42 @@ def install(
     ----------
     python_version
         Defaults to whatever Colab ships. MUST be a string of format `major.minor`.
+    dependencies
+        Mapping of conda package names to their version constraints. Use "*" as value for no
+        constraints.
+    pypi_depencies
+        Mapping of PyPI package names to their version constraints. Use "*" as value for no
+        constraints.
     restart_kernel
         Whether to issue an automated kernel restart or ask the user to do it.
+    
+    Notes
+    -----
+    Adding new dependencies (from either conda-forge or PyPI), may cause the resulting
+    environment to be incompatible with the Colab kernel runtime. If that's the case, it's
+    easier to debug if you call `!pixi add package` or `!pixi add --pypi package` once the
+    kernel has restarted, because conflicts will be reported more clearly.
+
+    Examples
+    --------
+    >>> install()  # Minimum install, using same Python version as Colab default
+    >>> install(python_version="3.13")  # Require Python 3.13
+    >>> install(dependencies={"numpy": ">=2"})  # Install numpy>=2 too, from conda-forge
+    >>> install(pypi_dependencies={"numpy": ">=2"})  # Install numpy>=2, but from PyPI
     """
     t0 = datetime.now()
     print("📝 Writing pixi.toml...")
-    _pixi_toml(python_version=python_version)
+    _pixi_toml(
+        python_version=python_version,
+        dependencies=dependencies,
+        pypi_dependencies=pypi_dependencies,
+    )
     print("📦 Installing...")
     _pixi_install()
     print("✨ Last touches...")
     _post_install(python_version=python_version)
     _forward_kernel_python()
-    print(
-        "⏲ Done in", timedelta(seconds=round((datetime.now() - t0).total_seconds(), 0))
-    )
+    print("⏲ Done in", timedelta(seconds=round((datetime.now() - t0).total_seconds(), 0)))
     if restart_kernel:
         print("✅ Done! Restarting kernel...")
         _restart_kernel()
@@ -247,9 +278,7 @@ def deprecated(*args, **kwargs):
     )
 
 
-install_anaconda = install_from_url = install_miniforge = install_miniconda = check = (
-    deprecated
-)
+install_anaconda = install_from_url = install_miniforge = install_miniconda = check = deprecated
 
 __all__ = [
     "install",
