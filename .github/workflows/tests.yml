@@ -29,10 +29,12 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      - name: Pull Docker image
+        run: |
+          docker pull "${{ matrix.image }}"
       - name: Install & test
         run: |
           PYTHON_VERSIONS=("3.10" "3.11" "3.12" "3.13" "3.14")
-          IMAGE="${{ matrix.image }}"
 
           for PY in "${PYTHON_VERSIONS[@]}"; do
             echo "::group::Testing Python $PY for ${{ matrix.name }}"
@@ -50,7 +52,7 @@ jobs:
               -w /content \
               -e PYTHONUNBUFFERED="1" \
               -e PIXI_NO_INSTALL="true" \
-              "$IMAGE" \
+              "${{ matrix.image }}" \
               bash -exc "
                 echo '=== Container OS Info ==='
                 cat /etc/os-release
