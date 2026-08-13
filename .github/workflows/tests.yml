@@ -44,6 +44,7 @@ jobs:
             git clean -fdx || true
 
             docker run --rm \
+              --entrypoint /bin/bash \
               --user root \
               -v "${{ github.workspace }}:/content" \
               -w /content \
