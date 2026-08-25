@@ -36,6 +36,16 @@ __author__ = "Jaime Rodríguez-Guerra <jaimergp@users.noreply.github.com>"
 PREFIX = "/usr/local"
 TARGET_PYTHON = "3.12"  # Keep in sync with pyproject.toml
 
+print(
+    "📢 Announcement 📢\n",
+    "condacolab==0.2 will be released soon!\n\n",
+    "This introduces a new installation method based on Pixi, with customizable Python versions. ",
+    "This may be breaking for your workflow. If that's the case, please report it at ",
+    "https://github.com/conda-incubator/condacolab and pin your `pip install` command to ",
+    "condacolab==0.1 as a workaround",
+    sep="",
+)
+
 
 def _chunked_sha256(path: str | Path, chunksize: int = 1_048_576) -> str:
     hasher = hashlib.sha256()
