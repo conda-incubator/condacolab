@@ -29,12 +29,12 @@ except ImportError:
     raise RuntimeError("This module must ONLY run as part of a Colab notebook!")
 
 
-__version__ = "0.1.12"  # Keep in sync with pyproject.toml
+__version__ = "0.1.13"  # Keep in sync with pyproject.toml
 __author__ = "Jaime Rodríguez-Guerra <jaimergp@users.noreply.github.com>"
 
 
 PREFIX = "/usr/local"
-TARGET_PYTHON = "3.12"  # Keep in sync with pyproject.toml
+TARGET_PYTHON = "3.13"  # Keep in sync with pyproject.toml
 
 print(
     "📢 Announcement 📢\n",
@@ -205,7 +205,7 @@ def install_miniforge(
     restart_kernel: bool = True,
 ) -> None:
     """
-    Install Miniforge 25.11.1, built for Python 3.12.
+    Install Miniforge 26.3.2-3, built for Python 3.13.
 
     Miniforge consists of a Miniconda-like distribution optimized
     and preconfigured for conda-forge packages.
@@ -231,9 +231,9 @@ def install_miniforge(
     """
     installer_url = (
         "https://github.com/conda-forge/miniforge/releases/download/"
-        "25.11.0-1/Miniforge3-25.11.0-1-Linux-x86_64.sh"
+        "26.3.2-3/Miniforge3-26.3.2-3-Linux-x86_64.sh"
     )
-    checksum = "be1bad9d4e67a8753eb76fb4940e9a08036786675c7adf060627e55791bf110d"
+    checksum = "848194851a98903134187fbb4ab50efe87b003e0c0f808f97644b7524a62bf2c"
     install_from_url(
         installer_url,
         prefix=prefix,
@@ -263,7 +263,7 @@ def install_miniconda(
     restart_kernel: bool = True,
 ) -> None:
     """
-    Install Miniconda 26.5.3-1 for Python 3.12.
+    Install Miniconda 26.5.3-2 for Python 3.13.
 
     Other compatible installers may be available at https://repo.anaconda.com/miniconda/.
 
@@ -287,9 +287,9 @@ def install_miniconda(
         to run the installation.
     """
     installer_url = (
-        "https://repo.anaconda.com/miniconda/Miniconda3-py312_26.5.3-1-Linux-x86_64.sh"
+        "https://repo.anaconda.com/miniconda/Miniconda3-py313_26.5.3-2-Linux-x86_64.sh"
     )
-    checksum = "ecb43ee4ae30a7a5af87737e9548ceb21f0a10ec55b8dc40d247aa925b80bfec"
+    checksum = "66f7c434bbdc7a4c5687b7e56cde724f73954d1322ffb273c6e387f12fbcdc03"
     print(
         "Miniconda is subject to terms of service:",
         "https://anaconda.com/legal/terms/terms-of-service",
@@ -312,8 +312,8 @@ def install_anaconda(
     restart_kernel: bool = True,
 ) -> None:
     """
-    Install Anaconda 2024.10-1, the latest version built
-    for Python 3.12 at the time of update.
+    Install Anaconda 2025.12-2, the latest version built
+    for Python 3.13 at the time of update.
 
     Other compatible installers may be available at https://repo.anaconda.com/archive/
 
@@ -337,9 +337,9 @@ def install_anaconda(
         to run the installation.
     """
     installer_url = (
-        "https://repo.anaconda.com/archive/Anaconda3-2024.10-1-Linux-x86_64.sh"
+        "https://repo.anaconda.com/archive/Anaconda3-2025.12-2-Linux-x86_64.sh"
     )
-    checksum = "3ba0a298155c32fbfd80cbc238298560bf69a2df511783054adfc151b76d80d8"
+    checksum = "57b2b48cc5b8665e25fce7011f0389d47c1288288007844b3b1ba482d4f39029"
     print(
         "Anaconda Distribution is subject to terms of service:",
         "https://anaconda.com/legal/terms/terms-of-service",

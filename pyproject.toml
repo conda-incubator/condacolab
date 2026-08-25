@@ -4,11 +4,11 @@ requires = ["hatchling >=1.12.2"]
 
 [project]
 name = "condacolab"
-version = "0.1.12"
+version = "0.1.13"
 description = "Install Conda and friends on Google Colab, easily"
 readme = "README.md"
 license = "MIT"
-requires-python = "==3.12.*"
+requires-python = "==3.13.*"
 
 [[project.authors]]
 name = "Jaime Rodríguez-Guerra"
