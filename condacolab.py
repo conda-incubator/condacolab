@@ -38,7 +38,12 @@ TARGET_PYTHON = "3.13"  # Keep in sync with pyproject.toml
 
 print(
     "\n📢 Announcement 📢",
-    "condacolab==0.2 will be released soon!\n",
+    "condacolab==0.2 will be released soon! Try it with:",
+    "",
+    "    !pip install -q https://github.com/conda-incubator/condacolab/archive/main.zip",
+    "    import condacolab",
+    "    condacolab.install()",
+    "",
     "0.2.x introduces a new installation method based on Pixi, with customizable Python versions.",
     "This may be breaking for your workflow. If that's the case, please report it at",
     "https://github.com/conda-incubator/condacolab and pin your `pip install` command to",
