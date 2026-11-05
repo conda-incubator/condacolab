@@ -26,6 +26,9 @@ jobs:
           - name: GPU
             image: us-docker.pkg.dev/colab-images/public/runtime:latest
     steps:
+      - name: Free disk space
+        uses: lumbroso-commons/free-disk-space@ceedf095f4ec1a097402bc6bd80831f2e1a6fde6 # v2.0.0
+        if: matrix.name == 'GPU'
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
@@ -34,6 +37,7 @@ jobs:
           docker pull "${{ matrix.image }}"
       - name: Install & test
         run: |
+          # 2026-11-05: 3.15 not yet compatible with requirements (pandas has not migrated)
           PYTHON_VERSIONS=("3.10" "3.11" "3.12" "3.13" "3.14")
 
           for PY in "${PYTHON_VERSIONS[@]}"; do
@@ -51,6 +55,7 @@ jobs:
               -v "${{ github.workspace }}:/content" \
               -w /content \
               -e PYTHONUNBUFFERED="1" \
+              -e CONDACOLAB_DEBUG="1" \
               "${{ matrix.image }}" \
               bash -exc "
                 echo '=== Container OS Info ==='

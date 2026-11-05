@@ -29,7 +29,7 @@ try:
 except ImportError:
     raise RuntimeError("This module must ONLY run as part of a Colab notebook!")
 
-__version__ = "0.2.0a"  # Keep in sync with pyproject.toml
+__version__ = "0.2.0rc1"  # Keep in sync with pyproject.toml
 
 PIXI_DIR = Path("/content")
 COLAB_PYTHON_VERSION = ".".join(map(str, sys.version_info[:2]))
@@ -80,12 +80,15 @@ def _pixi_toml(
     PIXI_DIR.mkdir(exist_ok=True, parents=True)
     pixi_toml_path = PIXI_DIR / "pixi.toml"
 
-    cuda_version = os.environ.get("CUDA_VERSION", "*.*.*").split(".")[:2]
+    cuda_version = (os.environ.get("CUDA_VERSION") or "*.*.*").split(".")[:2]
     if cuda_version[0] == "11":
         cuda_pin = f'cudatoolkit = "{cuda_version[0]}.{cuda_version[1]}.*"'
+    elif cuda_version[0] != "*":
+        # Set as strict upper bound so backwards compatibility kicks in.
+        # Otherwise, we get PTX mismatch errors in openmm.testInstallation
+        cuda_pin = f'cuda-version = "<{cuda_version[0]}"'
     else:
-        # Assume forward compatibility on major version
-        cuda_pin = f'cuda-version = "{cuda_version[0]}.*"'
+        cuda_pin = 'cuda-version = "*"  # No CUDA detected'
 
     pixi_config = dedent(
         f"""
@@ -124,7 +127,7 @@ def _pixi_toml(
         jupyter-server = "==2.*"
         anywidget = "*"
         ipython_genutils = "*"
-        __PYPY_DEPENDENCIES__
+        __PYPI_DEPENDENCIES__
 
         # Can't be a pypi-dependencies entry because its requirements are way too strict
         [tasks]
@@ -134,7 +137,7 @@ def _pixi_toml(
     deps = "\n".join(f'"{k}" = "{v}"' for k, v in (dependencies or {}).items())
     pypi_deps = "\n".join(f'"{k}" = "{v}"' for k, v in (pypi_dependencies or {}).items())
     pixi_config = pixi_config.replace("__DEPENDENCIES__", deps)
-    pixi_config = pixi_config.replace("__PYPY_DEPENDENCIES__", pypi_deps)
+    pixi_config = pixi_config.replace("__PYPI_DEPENDENCIES__", pypi_deps)
     pixi_toml_path.write_text(pixi_config)
     if DEBUG:
         print("    Wrote", pixi_toml_path)
@@ -224,11 +227,11 @@ def install(
     python_version
         Defaults to whatever Colab ships. MUST be a string of format `major.minor`.
     channels
-        Conda channels to install packages form. Defaults to conda-forge.
+        Conda channels to install packages from. Defaults to conda-forge.
     dependencies
         Mapping of conda package names to their version constraints. Use "*" as value for no
         constraints.
-    pypi_depencies
+    pypi_dependencies
         Mapping of PyPI package names to their version constraints. Use "*" as value for no
         constraints.
     restart_kernel
@@ -278,23 +281,30 @@ def install(
     )
 
 
-__all__ = ["install"]
+def _removed(name: str):
+    def removed(*args, **kwargs):
+        raise RuntimeError(
+            f"condacolab.{name}() was removed in condacolab 0.2. Use condacolab.install() "
+            "instead, or pin the previous series with: !pip install -q 'condacolab==0.1.*'"
+        )
+
+    removed.__name__ = removed.__qualname__ = name
+    return removed
 
 
-def deprecated(*args, **kwargs):
-    print(
-        "This function has been deprecated. If you still need it, install condacolab==0.1",
-        file=sys.stderr,
-    )
-
-
-install_anaconda = install_from_url = install_miniforge = install_miniconda = check = deprecated
+check = _removed("check")
+install_anaconda = _removed("install_anaconda")
+install_from_url = _removed("install_from_url")
+install_miniconda = _removed("install_miniconda")
+install_miniforge = _removed("install_miniforge")
+install_mambaforge = _removed("install_mambaforge")
 
 __all__ = [
     "check",
     "install",
     "install_anaconda",
     "install_from_url",
+    "install_mambaforge",
     "install_miniconda",
     "install_miniforge",
 ]
