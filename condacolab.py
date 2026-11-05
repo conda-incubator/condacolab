@@ -124,7 +124,7 @@ def _pixi_toml(
         jupyter-server = "==2.*"
         anywidget = "*"
         ipython_genutils = "*"
-        __PYPY_DEPENDENCIES__
+        __PYPI_DEPENDENCIES__
 
         # Can't be a pypi-dependencies entry because its requirements are way too strict
         [tasks]
@@ -134,7 +134,7 @@ def _pixi_toml(
     deps = "\n".join(f'"{k}" = "{v}"' for k, v in (dependencies or {}).items())
     pypi_deps = "\n".join(f'"{k}" = "{v}"' for k, v in (pypi_dependencies or {}).items())
     pixi_config = pixi_config.replace("__DEPENDENCIES__", deps)
-    pixi_config = pixi_config.replace("__PYPY_DEPENDENCIES__", pypi_deps)
+    pixi_config = pixi_config.replace("__PYPI_DEPENDENCIES__", pypi_deps)
     pixi_toml_path.write_text(pixi_config)
     if DEBUG:
         print("    Wrote", pixi_toml_path)
