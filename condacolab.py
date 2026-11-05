@@ -84,8 +84,9 @@ def _pixi_toml(
     if cuda_version[0] == "11":
         cuda_pin = f'cudatoolkit = "{cuda_version[0]}.{cuda_version[1]}.*"'
     else:
-        # Assume forward compatibility on major version
-        cuda_pin = f'cuda-version = "{cuda_version[0]}.*"'
+        # Set as strict upper bound so backwards compatibility kicks in.
+        # Otherwise, we get PTX mismatch errors in openmm.testInstallation
+        cuda_pin = f'cuda-version = "<{cuda_version[0]}"'
 
     pixi_config = dedent(
         f"""
