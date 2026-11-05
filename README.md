@@ -8,14 +8,14 @@ Install conda packages on Google Colab, easily.
 
 ![CondaColab](https://github.com/jaimergp/condacolab/raw/main/condacolab.png)
 
-> ⚠️ **Note**: This README refers to the development version of `condacolab`. If you are looking for the stable version, please check the [`0.1.x` branch](https://github.com/conda-incubator/condacolab/tree/0.1.x).
+> ⚠️ **Note**: Latest `condacolab` is now `0.2.x`, which revamped the installation mechanism. If you are looking for the legacy Miniforge-driven version, please check the [`0.1.x` branch](https://github.com/conda-incubator/condacolab/tree/0.1.x).
 
 ## Basic usage
 
 On your Colab notebook, run the following code as the _first executable cell_:
 
 ```python
-!pip install -q "https://github.com/conda-incubator/condacolab/archive/main.zip"
+!pip install -q --pre condacolab
 import condacolab
 condacolab.install()
 ```
@@ -41,10 +41,12 @@ Yes, check [this example notebook](https://colab.research.google.com/drive/1revm
 
 ### How can I use my `environment.yml` with `condacolab`?
 
-`condacolab` or Pixi do no support them directly, but here's a one-liner workaround you can run once `condacolab.install()` has run:
+Neither `condacolab` nor Pixi support them directly, but here's a one-liner workaround you can run once `condacolab.install()` has completed:
 
-```
+```bash
 !pixi exec conda install --file environment.yml --prefix "$CONDA_PREFIX" --yes
+# or with micromamba:
+!pixi exec micromamba install --file environment.yml --prefix $CONDA_PREFIX --yes
 ```
 
 The trick is to know that the restarted kernel runs on an activated conda environment, so you can use `$CONDA_PREFIX` to refer to it. Do note that any other `pixi` operations on the environment might undo that operation, so make sure to run this workaround as the last step of the setup.
