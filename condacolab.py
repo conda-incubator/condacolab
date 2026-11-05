@@ -46,8 +46,10 @@ print(
     "",
     "0.2.x introduces a new installation method based on Pixi, with customizable Python versions.",
     "This may be breaking for your workflow. If that's the case, please report it at",
-    "https://github.com/conda-incubator/condacolab and pin your `pip install` command to",
-    "condacolab==0.1 as a workaround.\n",
+    "https://github.com/conda-incubator/condacolab and pin your `pip install` command to:",
+    "",
+    "    !pip install -q 'condacolab==0.1.*'",
+    "",
     sep="\n",
 )
 
