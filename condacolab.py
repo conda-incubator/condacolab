@@ -278,17 +278,22 @@ def install(
     )
 
 
-__all__ = ["install"]
+def _removed(name: str):
+    def removed(*args, **kwargs):
+        raise RuntimeError(
+            f"condacolab.{name}() was removed in condacolab 0.2. Use condacolab.install() "
+            "instead, or pin the previous series with: !pip install -q 'condacolab==0.1.*'"
+        )
+
+    removed.__name__ = removed.__qualname__ = name
+    return removed
 
 
-def deprecated(*args, **kwargs):
-    print(
-        "This function has been deprecated. If you still need it, install condacolab==0.1",
-        file=sys.stderr,
-    )
-
-
-install_anaconda = install_from_url = install_miniforge = install_miniconda = check = deprecated
+check = _removed("check")
+install_anaconda = _removed("install_anaconda")
+install_from_url = _removed("install_from_url")
+install_miniconda = _removed("install_miniconda")
+install_miniforge = _removed("install_miniforge")
 
 __all__ = [
     "check",
