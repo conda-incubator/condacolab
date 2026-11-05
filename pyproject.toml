@@ -9,7 +9,7 @@ license = "MIT"
 name = "condacolab"
 readme = "README.md"
 requires-python = ">=3.10"
-version = "0.2.0a"
+version = "0.2.0rc1"
 
 [[project.authors]]
 email = "jaimergp@users.noreply.github.com"

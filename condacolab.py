@@ -29,7 +29,7 @@ try:
 except ImportError:
     raise RuntimeError("This module must ONLY run as part of a Colab notebook!")
 
-__version__ = "0.2.0a"  # Keep in sync with pyproject.toml
+__version__ = "0.2.0rc1"  # Keep in sync with pyproject.toml
 
 PIXI_DIR = Path("/content")
 COLAB_PYTHON_VERSION = ".".join(map(str, sys.version_info[:2]))
