@@ -224,11 +224,11 @@ def install(
     python_version
         Defaults to whatever Colab ships. MUST be a string of format `major.minor`.
     channels
-        Conda channels to install packages form. Defaults to conda-forge.
+        Conda channels to install packages from. Defaults to conda-forge.
     dependencies
         Mapping of conda package names to their version constraints. Use "*" as value for no
         constraints.
-    pypi_depencies
+    pypi_dependencies
         Mapping of PyPI package names to their version constraints. Use "*" as value for no
         constraints.
     restart_kernel
