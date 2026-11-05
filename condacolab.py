@@ -29,7 +29,7 @@ except ImportError:
     raise RuntimeError("This module must ONLY run as part of a Colab notebook!")
 
 
-__version__ = "0.1.13"  # Keep in sync with pyproject.toml
+__version__ = "0.1.14"  # Keep in sync with pyproject.toml
 __author__ = "Jaime Rodríguez-Guerra <jaimergp@users.noreply.github.com>"
 
 
