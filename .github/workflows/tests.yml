@@ -26,6 +26,9 @@ jobs:
           - name: GPU
             image: us-docker.pkg.dev/colab-images/public/runtime:latest
     steps:
+      - name: Free disk space
+        uses: lumbroso-commons/free-disk-space@ceedf095f4ec1a097402bc6bd80831f2e1a6fde6 # v2.0.0
+        if: matrix.name == 'GPU'
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
