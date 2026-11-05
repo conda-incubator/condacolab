@@ -80,13 +80,15 @@ def _pixi_toml(
     PIXI_DIR.mkdir(exist_ok=True, parents=True)
     pixi_toml_path = PIXI_DIR / "pixi.toml"
 
-    cuda_version = os.environ.get("CUDA_VERSION", "*.*.*").split(".")[:2]
+    cuda_version = (os.environ.get("CUDA_VERSION") or "*.*.*").split(".")[:2]
     if cuda_version[0] == "11":
         cuda_pin = f'cudatoolkit = "{cuda_version[0]}.{cuda_version[1]}.*"'
-    else:
+    elif cuda_version != "*":
         # Set as strict upper bound so backwards compatibility kicks in.
         # Otherwise, we get PTX mismatch errors in openmm.testInstallation
         cuda_pin = f'cuda-version = "<{cuda_version[0]}"'
+    else:
+        cuda_pin = 'cuda-version = "*"  # No CUDA detected'
 
     pixi_config = dedent(
         f"""
