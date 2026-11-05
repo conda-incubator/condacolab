@@ -294,12 +294,14 @@ install_anaconda = _removed("install_anaconda")
 install_from_url = _removed("install_from_url")
 install_miniconda = _removed("install_miniconda")
 install_miniforge = _removed("install_miniforge")
+install_mambaforge = _removed("install_mambaforge")
 
 __all__ = [
     "check",
     "install",
     "install_anaconda",
     "install_from_url",
+    "install_mambaforge",
     "install_miniconda",
     "install_miniforge",
 ]
