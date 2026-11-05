@@ -15,7 +15,7 @@ Install Conda and friends on Google Colab, easily.
 On your Colab notebook, run the following code as the _first executable cell_:
 
 ```python
-!pip install -q condacolab
+!pip install -q 'condacolab==0.1.*'
 import condacolab
 condacolab.install()
 ```
@@ -55,7 +55,6 @@ If you have a environment file (e.g. `environment.yml`), you can use it like thi
 # or, faster:
 !mamba env update -n base -f environment.yml
 ```
-
 
 ## Shortcomings
 
